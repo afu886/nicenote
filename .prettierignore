@@ -15,8 +15,8 @@ drizzle
 # Generated files
 **/*.d.ts
 **/*.js
-!*.config.js
-!eslint.config.js
+!*.config.ts
+!eslint.config.ts
 
 # Environment files
 .env

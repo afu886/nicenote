@@ -18,7 +18,7 @@ const __dirname = dirname(__filename)
 /**
  * 辅助函数：快速定位 tsconfig
  */
-const getTsconfigPath = (path) => resolve(__dirname, path)
+const getTsconfigPath = (path: string) => resolve(__dirname, path)
 
 export default tseslint.config(
   // 1. 全局忽略配置
@@ -32,8 +32,6 @@ export default tseslint.config(
       '**/drizzle/**',
       '**/.wrangler/**',
       '**/*.d.ts',
-      '!*.config.js',
-      '!eslint.config.js',
     ],
   },
 
@@ -73,7 +71,6 @@ export default tseslint.config(
     rules: {
       ...reactHooks.configs['recommended-latest'].rules,
       ...react.configs.recommended.rules,
-      'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'error',
       'react/react-in-jsx-scope': 'off',
     },
@@ -136,7 +133,6 @@ export default tseslint.config(
     },
     languageOptions: {
       ecmaVersion: 2020,
-      globals: globals.browser,
       parserOptions: {
         project: [getTsconfigPath('apps/web/tsconfig.eslint.json')],
       },
@@ -191,10 +187,10 @@ export default tseslint.config(
   {
     files: ['packages/editor/**/*.{ts,tsx}', 'packages/ui/**/*.{ts,tsx}'],
     rules: {
-      'react/prop-types': 'off', // 使用 TypeScript 类型，不需要 PropTypes
-      'react-hooks/set-state-in-effect': 'off', // 允许在 effect 中同步调用 setState
-      'react-hooks/refs': 'off', // 允许在 render 中访问 refs（某些场景需要）
-      'react-hooks/immutability': 'off', // 允许修改 refs
+      'react/prop-types': 'off',
+      'react-hooks/set-state-in-effect': 'off',
+      'react-hooks/refs': 'off',
+      'react-hooks/immutability': 'off',
     },
   },
 
@@ -232,7 +228,7 @@ export default tseslint.config(
     },
     rules: {
       'prettier/prettier': 'error',
-      ...prettierConfig.rules, // 关闭 ESLint 中与 Prettier 冲突的规则
+      ...prettierConfig.rules,
     },
   }
 )
