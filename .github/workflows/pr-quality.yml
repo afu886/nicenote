@@ -22,7 +22,7 @@ on:
         type: string
 
 concurrency:
-  group: pr-quality-${{ github.event.pull_request.number || github.ref }}
+  group: pr-quality-${{ github.event.pull_request.number || github.ref }}-${{ github.event_name == 'workflow_call' && inputs.scope || 'pr' }}
   cancel-in-progress: true
 
 permissions:
