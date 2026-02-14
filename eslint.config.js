@@ -221,7 +221,7 @@ export default tseslint.config(
   {
     files: ['packages/shared/**/*.ts'],
     rules: {
-      '@typescript-eslint/no-explicit-any': 'off', // deepClone 等工具函数需要使用 any
+      '@typescript-eslint/no-explicit-any': 'off',
     },
   },
 

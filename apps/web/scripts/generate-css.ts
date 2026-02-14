@@ -4,6 +4,7 @@
  */
 import { writeFileSync } from 'node:fs'
 
+import { toKebabCase } from '@nicenote/shared'
 import {
   borderRadius,
   colors,
@@ -153,10 +154,6 @@ const COLOR_SECTIONS: VarSection[] = [
     ],
   },
 ]
-
-function toKebabCase(value: string): string {
-  return value.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase()
-}
 
 function toSpacingTokenKey(value: string): string {
   // Escape decimal point so utilities like p-1.5 resolve to --spacing-1\.5
