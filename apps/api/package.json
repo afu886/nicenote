@@ -1,0 +1,26 @@
+{
+  "name": "api",
+  "dependencies": {
+    "@nicenote/contract": "workspace:*",
+    "drizzle-orm": "^0.45.1",
+    "hono": "^4.11.9",
+    "nanoid": "^5.1.6"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260129.0",
+    "@types/node": "^24.10.10",
+    "drizzle-kit": "^0.31.8",
+    "typescript": "~5.9.3",
+    "wrangler": "^4.4.0"
+  },
+  "scripts": {
+    "cf-typegen": "wrangler types --env-interface CloudflareBindings",
+    "db:migrate": "wrangler d1 migrations apply nicenote-db --local",
+    "db:migrate:prod": "wrangler d1 migrations apply nicenote-db",
+    "db:studio": "drizzle-kit studio",
+    "deploy": "wrangler deploy --minify",
+    "dev": "wrangler dev",
+    "lint": "eslint ."
+  },
+  "type": "module"
+}

@@ -1,0 +1,44 @@
+{
+  "name": "nicenote",
+  "devDependencies": {
+    "@eslint/js": "^9.39.2",
+    "eslint": "^9.39.2",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.5",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.5.0",
+    "eslint-plugin-simple-import-sort": "^12.1.1",
+    "eslint-plugin-tailwindcss": "4.0.0-beta.0",
+    "globals": "^16.5.0",
+    "husky": "^9.0.0",
+    "lint-staged": "^16.2.7",
+    "madge": "^8.0.0",
+    "prettier": "^3.8.1",
+    "tailwindcss": "^4.1.18",
+    "tsx": "^4.21.0",
+    "turbo": "^2.8.1",
+    "typescript": "~5.9.3",
+    "typescript-eslint": "^8.54.0"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,css,scss,md,html,yml,yaml}": [
+      "prettier --write"
+    ]
+  },
+  "packageManager": "pnpm@10.28.2",
+  "private": true,
+  "scripts": {
+    "build": "turbo build",
+    "dev": "turbo dev",
+    "generate:css": "pnpm --filter web generate:css",
+    "lint": "turbo lint && pnpm lint:cycles",
+    "lint:cycles": "madge --extensions ts,tsx --ts-config ./tsconfig.madge.json --exclude '(?:^|/)dist/|\\\\.css$' --circular apps/api/src apps/web/src/App.tsx apps/web/src/components apps/web/src/hooks apps/web/src/lib apps/web/src/store packages/contract/src packages/editor/src packages/shared/src packages/tokens/src packages/ui/src",
+    "prepare": "husky"
+  },
+  "type": "module"
+}

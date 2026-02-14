@@ -1,0 +1,38 @@
+{
+  "name": "@nicenote/editor",
+  "version": "0.0.1",
+  "dependencies": {
+    "@nicenote/ui": "workspace:*",
+    "@tiptap/core": "^3.18.0",
+    "@tiptap/extension-placeholder": "^3.18.0",
+    "@tiptap/extension-text-align": "^3.18.0",
+    "@tiptap/extension-typography": "^3.18.0",
+    "@tiptap/markdown": "^3.18.0",
+    "@tiptap/react": "^3.18.0",
+    "@tiptap/starter-kit": "^3.18.0",
+    "lucide-react": "^0.563.0",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.10",
+    "@types/react-dom": "^19.2.3",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./styles/editor.css": "./src/styles/editor.css",
+    "./styles/tokens.css": "./src/styles/tokens.css"
+  },
+  "peerDependencies": {
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  },
+  "private": true,
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "echo 'Editor package - no dev script needed'",
+    "lint": "eslint ."
+  },
+  "type": "module"
+}

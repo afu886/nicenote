@@ -1,0 +1,22 @@
+:root {
+  --nn-editor-surface: var(--color-background, #ffffff);
+  --nn-editor-surface-muted: var(--color-muted, #f9fafb);
+  --nn-editor-foreground: var(--color-foreground, #111827);
+  --nn-editor-foreground-muted: var(--color-muted-foreground, #6b7280);
+  --nn-editor-border: var(--color-border, #e5e7eb);
+  --nn-editor-accent: var(--color-primary, #1d4ed8);
+  --nn-editor-accent-soft: color-mix(in srgb, var(--nn-editor-accent) 20%, transparent);
+  --nn-editor-font-sans:
+    var(--font-sans), 'DM Sans', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  --nn-editor-font-mono:
+    var(--font-mono), 'JetBrainsMono', 'SFMono-Regular', Menlo, Monaco, Consolas, monospace;
+}
+
+.dark {
+  --nn-editor-surface: var(--color-background, #111827);
+  --nn-editor-surface-muted: var(--color-muted, #1f2937);
+  --nn-editor-foreground: var(--color-foreground, #f9fafb);
+  --nn-editor-foreground-muted: var(--color-muted-foreground, #d1d5db);
+  --nn-editor-border: var(--color-border, #374151);
+  --nn-editor-accent: var(--color-primary, #60a5fa);
+}

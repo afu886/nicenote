@@ -1,0 +1,100 @@
+############################
+# Dependencies
+############################
+node_modules/
+.pnpm-store/
+.pnpm-debug.log*
+
+############################
+# Build / Output
+############################
+dist/
+build/
+out/
+.vercel/
+.turbo/
+
+############################
+# Cloudflare / Hono / Workers
+############################
+.wrangler/
+.wrangler-cache/
+wrangler.toml.dev
+.dev.vars
+
+############################
+# TypeScript / IDE Cache
+############################
+*.tsbuildinfo
+*.js.map
+*.d.ts.map
+
+############################
+# Environment Variables
+############################
+.env
+.env.*
+!.env.example
+
+############################
+# Logs
+############################
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+############################
+# Tailwind / PostCSS cache
+############################
+.tailwindcss-cache/
+
+############################
+# Test / Coverage
+############################
+coverage/
+.playwright/
+.cypress/
+test-results/
+
+############################
+# OS / Editor
+############################
+.DS_Store
+._*
+Thumbs.db
+.directory
+.history
+
+.vscode/
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+
+############################
+# Database
+############################
+*.db
+*.sqlite
+*.sqlite3
+
+############################
+# Security
+############################
+*.pem
+*.key
+*.cert
+
+############################
+# Misc
+############################
+*.swp
+*.swo
+*.bak
+gha-creds-*.json
+
+############################
+# Refs
+############################
+noveleditor/

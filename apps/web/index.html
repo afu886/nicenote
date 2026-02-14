@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Theme initialization script - runs before page renders to prevent flash -->
+    <script>
+      ;(function () {
+        const THEME_KEY = 'nicenote-theme'
+        const savedTheme = localStorage.getItem(THEME_KEY)
+
+        // Default to light mode if no saved preference
+        const shouldBeDark = savedTheme === 'dark'
+
+        if (shouldBeDark) {
+          document.documentElement.classList.add('dark')
+          document.documentElement.setAttribute('data-theme', 'dark')
+        } else {
+          document.documentElement.classList.remove('dark')
+          document.documentElement.setAttribute('data-theme', 'light')
+        }
+      })()
+    </script>
+
+    <title>web</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

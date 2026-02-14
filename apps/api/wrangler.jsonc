@@ -1,0 +1,15 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "api",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-01-29",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "nicenote-db",
+      "database_id": "49c6fb86-1c84-486b-bbcf-f4a612de6642",
+      "preview_database_id": "DB",
+      "migrations_dir": "drizzle",
+    },
+  ],
+}

@@ -1,0 +1,260 @@
+@import 'tailwindcss';
+@plugin "@tailwindcss/typography";
+@source "../../packages";
+@config "../tailwind.config.ts";
+
+/* Nicenote Editor Required Styles */
+@import '@nicenote/editor/styles/editor.css';
+
+@theme {
+  /* Auto-generated from @nicenote/tokens */
+
+  /* Typography */
+  --font-sans:
+    'DM Sans', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans SC',
+    'Noto Sans CJK SC', 'Source Han Sans SC', 'Helvetica Neue', Arial, sans-serif;
+  --font-mono:
+    'JetBrainsMono', 'SFMono-Regular', 'SF Mono', 'Cascadia Mono', 'Segoe UI Mono', 'Roboto Mono',
+    'Noto Sans Mono CJK SC', 'Source Han Mono SC', Menlo, Monaco, Consolas, 'Liberation Mono',
+    'Courier New', monospace;
+  --text-caption: 0.625rem;
+  --text-caption--line-height: 0.875rem;
+  --text-meta: 0.6875rem;
+  --text-meta--line-height: 1rem;
+  --text-xs: 0.75rem;
+  --text-xs--line-height: 1rem;
+  --text-sm: 0.875rem;
+  --text-sm--line-height: 1.25rem;
+  --text-button: 0.9375rem;
+  --text-button--line-height: 1.25rem;
+  --text-base: 1rem;
+  --text-base--line-height: 1.5rem;
+  --text-md: 1.125rem;
+  --text-md--line-height: 1.5rem;
+  --text-lg: 1.25rem;
+  --text-lg--line-height: 1.75rem;
+  --text-xl: 1.5rem;
+  --text-xl--line-height: 2rem;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* Radius */
+  --radius-xs: 0.25rem;
+  --radius-sm: 0.5rem;
+
+  /* Spacing */
+  --spacing: 0.25rem;
+  --spacing-1: 0.25rem;
+  --spacing-2: 0.5rem;
+  --spacing-3: 0.75rem;
+  --spacing-4: 1rem;
+  --spacing-6: 1.5rem;
+  --spacing-8: 2rem;
+  --spacing-11: 2.75rem;
+  --spacing-12: 3rem;
+  --spacing-16: 4rem;
+  --spacing-25: 6.25rem;
+  --spacing-32: 8rem;
+  --spacing-40: 10rem;
+  --spacing-0\.5: 0.125rem;
+  --spacing-1\.25: 0.3125rem;
+  --spacing-1\.5: 0.375rem;
+  --spacing-2\.5: 0.625rem;
+  --spacing-9\.5: 2.375rem;
+
+  /* Shadows */
+  --shadow-none: none;
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+
+  /* Motion */
+  --motion-duration-fast: 0.12s;
+  --motion-duration-base: 0.2s;
+  --motion-easing-standard: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Primary colors */
+  --color-primary: #1d4ed8;
+  --color-primary-hover: #1d4ed8;
+  --color-primary-active: #1e3a8a;
+  --color-primary-focus: #3b82f6;
+  --color-primary-disabled: #93c5fd;
+  --color-primary-text: #1d4ed8;
+  --color-primary-bg: #eff6ff;
+  --color-primary-foreground: #ffffff;
+
+  /* Secondary colors */
+  --color-secondary: #6d28d9;
+  --color-secondary-hover: #6d28d9;
+  --color-secondary-active: #4c1d95;
+  --color-secondary-disabled: #c4b5fd;
+  --color-secondary-text: #6d28d9;
+  --color-secondary-bg: #f5f3ff;
+  --color-secondary-foreground: var(--color-foreground);
+
+  /* Background and foreground */
+  --color-background: #ffffff;
+  --color-foreground: #111827;
+
+  /* Muted */
+  --color-muted: #f9fafb;
+  --color-muted-foreground: #374151;
+
+  /* Border */
+  --color-border: #f3f4f6;
+  --color-ring: #3b82f6;
+
+  /* Accent */
+  --color-accent: var(--color-hover);
+  --color-accent-foreground: var(--color-hover-foreground);
+
+  /* Active state */
+  --color-active: #f3f4f6;
+  --color-active-foreground: var(--color-primary-text);
+
+  /* Hover state */
+  --color-hover: #f3f4f6;
+  --color-hover-foreground: var(--color-primary-text);
+
+  /* Destructive */
+  --color-destructive: #ef4444;
+  --color-destructive-hover: #b91c1c;
+  --color-destructive-foreground: var(--color-primary-foreground);
+  --color-destructive-text: #b91c1c;
+  --color-destructive-bg: #fef2f2;
+  --color-destructive-border: #fca5a5;
+
+  /* Success */
+  --color-success: #10b981;
+  --color-success-hover: #047857;
+  --color-success-text: #047857;
+  --color-success-bg: #ecfdf5;
+  --color-success-border: #6ee7b7;
+
+  /* Warning */
+  --color-warning: #f59e0b;
+  --color-warning-hover: #b45309;
+  --color-warning-text: #b45309;
+  --color-warning-bg: #fffbeb;
+  --color-warning-border: #fcd34d;
+
+  /* Info */
+  --color-info: #3b82f6;
+  --color-info-hover: #1d4ed8;
+  --color-info-text: #1d4ed8;
+  --color-info-bg: #eff6ff;
+  --color-info-border: #93c5fd;
+
+  /* Popover */
+  --color-popover: var(--color-background);
+  --color-popover-foreground: var(--color-foreground);
+
+  /* Card */
+  --color-card: var(--color-background);
+  --color-card-foreground: var(--color-foreground);
+}
+
+/* Dark mode */
+.dark {
+  /* Primary colors */
+  --color-primary: #3b82f6;
+  --color-primary-hover: #93c5fd;
+  --color-primary-active: #93c5fd;
+  --color-primary-focus: #1d4ed8;
+  --color-primary-disabled: #1e3a8a;
+  --color-primary-text: #374151;
+  --color-primary-bg: #172554;
+  --color-primary-foreground: #111827;
+
+  /* Secondary colors */
+  --color-secondary: #8b5cf6;
+  --color-secondary-hover: #c4b5fd;
+  --color-secondary-active: #c4b5fd;
+  --color-secondary-disabled: #4c1d95;
+  --color-secondary-text: #c4b5fd;
+  --color-secondary-bg: #2e1065;
+  --color-secondary-foreground: var(--color-foreground);
+
+  /* Background and foreground */
+  --color-background: #111827;
+  --color-foreground: #f9fafb;
+
+  /* Muted */
+  --color-muted: #111827;
+  --color-muted-foreground: #d1d5db;
+
+  /* Border */
+  --color-border: #374151;
+  --color-ring: #3b82f6;
+
+  /* Accent */
+  --color-accent: var(--color-hover);
+  --color-accent-foreground: var(--color-hover-foreground);
+
+  /* Active state */
+  --color-active: #374151;
+  --color-active-foreground: var(--color-primary-text);
+
+  /* Hover state */
+  --color-hover: #374151;
+  --color-hover-foreground: var(--color-primary-text);
+
+  /* Destructive */
+  --color-destructive: #ef4444;
+  --color-destructive-hover: #fca5a5;
+  --color-destructive-foreground: var(--color-primary-foreground);
+  --color-destructive-text: #fca5a5;
+  --color-destructive-bg: #450a0a;
+  --color-destructive-border: #7f1d1d;
+
+  /* Success */
+  --color-success: #10b981;
+  --color-success-hover: #6ee7b7;
+  --color-success-text: #6ee7b7;
+  --color-success-bg: #052e16;
+  --color-success-border: #064e3b;
+
+  /* Warning */
+  --color-warning: #f59e0b;
+  --color-warning-hover: #fcd34d;
+  --color-warning-text: #fcd34d;
+  --color-warning-bg: #422006;
+  --color-warning-border: #78350f;
+
+  /* Info */
+  --color-info: #3b82f6;
+  --color-info-hover: #93c5fd;
+  --color-info-text: #93c5fd;
+  --color-info-bg: #172554;
+  --color-info-border: #1e3a8a;
+
+  /* Popover */
+  --color-popover: var(--color-background);
+  --color-popover-foreground: var(--color-foreground);
+
+  /* Card */
+  --color-card: var(--color-background);
+  --color-card-foreground: var(--color-foreground);
+}
+
+@layer base {
+  input,
+  textarea,
+  select {
+    @apply border border-border rounded-md;
+  }
+
+  input:focus,
+  textarea:focus,
+  select:focus,
+  button:focus {
+    @apply focus:ring-1 focus:ring-ring focus:outline-none;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    @apply bg-background text-foreground;
+  }
+}
