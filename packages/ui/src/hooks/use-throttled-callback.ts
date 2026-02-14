@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 
-import throttle from 'lodash.throttle'
+import { throttle } from '@nicenote/shared'
 
 import { useUnmount } from './use-unmount'
 
@@ -31,10 +31,9 @@ export function useThrottledCallback<T extends (...args: any[]) => any>(
 ): {
   (this: ThisParameterType<T>, ...args: Parameters<T>): ReturnType<T>
   cancel: () => void
-  flush: () => void
 } {
   const handler = useMemo(
-    () => throttle<T>(fn, wait, options),
+    () => throttle<T>(fn, wait, { ...defaultOptions, ...options }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     dependencies
   )

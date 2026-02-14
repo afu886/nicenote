@@ -150,7 +150,7 @@ export default tseslint.config(
             {
               group: ['apps/api/**', '../api/**', '../../api/**', '../../../api/**'],
               message:
-                'Do not import from apps/api in web. Import contract types from @nicenote/contract.',
+                'Do not import from apps/api in web. Import shared types from @nicenote/shared.',
             },
           ],
         },

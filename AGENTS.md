@@ -9,7 +9,6 @@ apps/
   api/          # Hono + Cloudflare Workers + D1 (SQLite) backend
   web/          # React 19 + Vite 7 + TailwindCSS v4 frontend
 packages/
-  contract/     # API contract (schemas/routes/AppType) shared by api + web
   editor/       # Tiptap v3 rich text editor component
   ui/           # Radix UI based component library
   tokens/       # Design tokens (colors, typography, spacing, shadows)
@@ -54,7 +53,7 @@ pnpm --filter web generate:css   # Regenerate CSS from design tokens
 
 ### End-to-End Type Safety
 
-`AppType` is exported by `packages/contract` and imported by the web app at `apps/web/src/lib/api.ts`. The API registers routes from the same contract package. This keeps full RPC type safety while avoiding a direct `web -> api runtime` type dependency.
+`AppType` is exported by `apps/api/src/routes.ts` (re-exported from `apps/api/src/index.ts`) and imported by the web app at `apps/web/src/lib/api.ts` as a type-only dependency (`import type { AppType } from 'api'`). This keeps full RPC type safety while avoiding a direct `web -> api runtime` type dependency.
 
 ### Database Schema
 
