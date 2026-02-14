@@ -64,9 +64,20 @@ jobs:
           VITE_API_URL: ${{ vars.VITE_API_URL }}
         run: pnpm build
 
+      - name: Validate Pages project config
+        env:
+          CLOUDFLARE_PAGES_PROJECT_NAME: ${{ vars.CLOUDFLARE_PAGES_PROJECT_NAME }}
+        run: |
+          if [ -z "$CLOUDFLARE_PAGES_PROJECT_NAME" ]; then
+            echo "Missing repository variable: CLOUDFLARE_PAGES_PROJECT_NAME"
+            echo "Set it to your existing Cloudflare Pages project name."
+            exit 1
+          fi
+
       - name: Deploy Web (Cloudflare Pages)
         working-directory: apps/web
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: pnpm dlx wrangler@4 pages deploy dist --project-name nicenote
+          CLOUDFLARE_PAGES_PROJECT_NAME: ${{ vars.CLOUDFLARE_PAGES_PROJECT_NAME }}
+        run: pnpm dlx wrangler@4 pages deploy dist --project-name "$CLOUDFLARE_PAGES_PROJECT_NAME"
