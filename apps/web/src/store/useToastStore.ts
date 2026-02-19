@@ -28,7 +28,10 @@ export const useToastStore = create<ToastStore>((set) => ({
     const duration = options?.duration ?? 5000
 
     set((state) => ({
-      toasts: [...state.toasts, { id, message, action: options?.action }],
+      toasts: [
+        ...state.toasts,
+        { id, message, ...(options?.action !== undefined ? { action: options.action } : {}) },
+      ],
     }))
 
     const timerId = setTimeout(() => {

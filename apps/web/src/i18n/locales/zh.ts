@@ -1,6 +1,4 @@
-import type en from './en'
-
-const zh: typeof en = {
+const zh = {
   sidebar: {
     openSidebar: '\u6253\u5f00\u4fa7\u8fb9\u680f',
     closeSidebar: '\u5173\u95ed\u4fa7\u8fb9\u680f',
@@ -90,6 +88,6 @@ const zh: typeof en = {
     sourcePlaceholder: '\u8bf7\u8f93\u5165 Markdown \u5185\u5bb9',
     sourceLabel: '\u7b14\u8bb0\u5185\u5bb9',
   },
-} as const
+}
 
 export default zh

@@ -154,9 +154,12 @@ export const useNoteStore = create<NoteStore>((set) => ({
       const listUpdates: Partial<NoteListItem> = { updatedAt: now }
       if (updates.title !== undefined) listUpdates.title = updates.title
       const newNotes = state.notes.map((n) => (n.id === id ? { ...n, ...listUpdates } : n))
+      const noteFieldUpdates: Partial<NoteSelect> = { updatedAt: now }
+      if (updates.title !== undefined) noteFieldUpdates.title = updates.title
+      if (updates.content !== undefined) noteFieldUpdates.content = updates.content
       const newCurrentNote =
         state.currentNote?.id === id
-          ? { ...state.currentNote, ...updates, updatedAt: now }
+          ? { ...state.currentNote, ...noteFieldUpdates }
           : state.currentNote
 
       return { notes: newNotes, currentNote: newCurrentNote }

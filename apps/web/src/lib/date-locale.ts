@@ -1,3 +1,4 @@
+import type { Locale } from 'date-fns'
 import { enUS, zhCN } from 'date-fns/locale'
 
 const DATE_LOCALE_MAP: Record<string, Locale> = {

@@ -79,7 +79,7 @@ export function NoteEditorPane({
         sourcePlaceholder: t('editorContent.sourcePlaceholder'),
         sourceLabel: t('editorContent.sourceLabel'),
       },
-      translateValidationError: (key: string) => t(key),
+      translateValidationError: (key: string) => t(key as Parameters<typeof t>[0]),
     }),
     [t]
   )
@@ -142,7 +142,7 @@ export function NoteEditorPane({
           </div>
           <div className="flex-1 overflow-hidden px-8 pb-8">
             <NicenoteEditor
-              value={currentNote.content ?? undefined}
+              value={currentNote.content ?? ''}
               onChange={handleContentChange}
               labels={editorLabels}
             />
