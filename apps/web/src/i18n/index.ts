@@ -8,11 +8,15 @@ import zh from './locales/zh'
 const LANG_STORAGE_KEY = 'nicenote-lang'
 
 function detectLanguage(): string {
-  const saved = localStorage.getItem(LANG_STORAGE_KEY)
-  if (saved === 'zh' || saved === 'en') return saved
+  if (typeof localStorage !== 'undefined') {
+    const saved = localStorage.getItem(LANG_STORAGE_KEY)
+    if (saved === 'zh' || saved === 'en') return saved
+  }
 
-  const browserLang = navigator.language
-  if (browserLang.startsWith('zh')) return 'zh'
+  if (typeof navigator !== 'undefined') {
+    const browserLang = navigator.language
+    if (browserLang.startsWith('zh')) return 'zh'
+  }
   return 'en'
 }
 
