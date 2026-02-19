@@ -2,7 +2,12 @@ import { drizzle } from 'drizzle-orm/d1'
 import { and, eq, lt, or } from 'drizzle-orm/sql/expressions/conditions'
 import { desc } from 'drizzle-orm/sql/expressions/select'
 
-import { type NoteContractService, type NoteInsert, type NoteSelect } from '@nicenote/shared'
+import {
+  generateSummary,
+  type NoteContractService,
+  type NoteInsert,
+  type NoteSelect,
+} from '@nicenote/shared'
 
 import { notes } from '../db/schema'
 
@@ -42,6 +47,7 @@ export function createNoteService(bindings: NoteServiceBindings): NoteContractSe
         .select({
           id: notes.id,
           title: notes.title,
+          content: notes.content,
           createdAt: notes.createdAt,
           updatedAt: notes.updatedAt,
         })
@@ -51,7 +57,10 @@ export function createNoteService(bindings: NoteServiceBindings): NoteContractSe
         .limit(limit + 1)
         .all()
       const hasMore = rows.length > limit
-      const data = hasMore ? rows.slice(0, limit) : rows
+      const data = (hasMore ? rows.slice(0, limit) : rows).map(({ content, ...rest }) => ({
+        ...rest,
+        summary: generateSummary(content),
+      }))
       const last = data[data.length - 1]
       const nextCursor = hasMore && last ? last.updatedAt : null
       const nextCursorId = hasMore && last ? last.id : null

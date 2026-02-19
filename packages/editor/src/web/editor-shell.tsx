@@ -32,6 +32,7 @@ export interface NicenoteEditorProps {
   onSourceModeChange?: (enabled: boolean) => void
   className?: string
   labels?: EditorLabels
+  isMobile?: boolean
 }
 
 function useSourceModeState(props: {
@@ -69,10 +70,12 @@ export function NicenoteEditor({
   onSourceModeChange,
   className,
   labels,
+  isMobile: isMobileProp,
 }: NicenoteEditorProps) {
   const resolvedLabels = labels ?? DEFAULT_EDITOR_LABELS
   const initialMarkdown = useMemo(() => normalizeMarkdownContent(value), [value])
-  const isMobile = useIsBreakpoint()
+  const isMobileFromHook = useIsBreakpoint()
+  const isMobile = isMobileProp ?? isMobileFromHook
   const isApplyingExternalContent = useRef(false)
   const lastEmittedMarkdown = useRef(initialMarkdown)
 

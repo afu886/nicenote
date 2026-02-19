@@ -1,9 +1,12 @@
 import { create } from 'zustand'
 
 import type { NoteListItem, NoteSelect, NoteUpdateInput } from '@nicenote/shared'
+import { generateSummary } from '@nicenote/shared'
 
 import i18n from '../i18n'
 import { api } from '../lib/api'
+
+import { useToastStore } from './useToastStore'
 
 interface NoteStore {
   notes: NoteListItem[]
@@ -36,6 +39,7 @@ function normalizeListItem(raw: unknown): NoteListItem | null {
   return {
     id,
     title: typeof data.title === 'string' ? data.title : 'Untitled',
+    summary: typeof data.summary === 'string' ? data.summary : null,
     createdAt,
     updatedAt,
   }
@@ -72,6 +76,8 @@ function normalizeNoteList(raw: unknown): NoteListItem[] {
   }, [])
 }
 
+let selectNoteSeq = 0
+
 export const useNoteStore = create<NoteStore>((set) => ({
   notes: [],
   currentNote: null,
@@ -98,24 +104,28 @@ export const useNoteStore = create<NoteStore>((set) => ({
 
   selectNote: async (note) => {
     if (!note) {
+      selectNoteSeq++
       set({ currentNote: null })
       return
     }
+    const seq = ++selectNoteSeq
     try {
       const res = await api.notes[':id'].$get({ param: { id: note.id } })
+      if (seq !== selectNoteSeq) return
       if (res.ok) {
         const full = normalizeNote(await res.json())
         set({ currentNote: full })
       } else {
-        set({ error: i18n.t('store.failedToFetchNote', { status: res.status }) })
+        useToastStore.getState().addToast(i18n.t('store.failedToFetchNote', { status: res.status }))
       }
     } catch {
-      set({ error: i18n.t('store.networkErrorFetchNote') })
+      if (seq !== selectNoteSeq) return
+      useToastStore.getState().addToast(i18n.t('store.networkErrorFetchNote'))
     }
   },
 
   createNote: async () => {
-    set({ isCreating: true, error: null })
+    set({ isCreating: true })
     try {
       const res = await api.notes.$post({
         json: { title: 'Untitled', content: '' },
@@ -123,13 +133,14 @@ export const useNoteStore = create<NoteStore>((set) => ({
       if (res.ok) {
         const newNote = normalizeNote(await res.json())
         if (!newNote) {
-          set({ error: i18n.t('store.failedToParseNote') })
+          useToastStore.getState().addToast(i18n.t('store.failedToParseNote'))
           return
         }
 
         const listItem: NoteListItem = {
           id: newNote.id,
           title: newNote.title,
+          summary: generateSummary(newNote.content),
           createdAt: newNote.createdAt,
           updatedAt: newNote.updatedAt,
         }
@@ -139,10 +150,12 @@ export const useNoteStore = create<NoteStore>((set) => ({
           currentNote: newNote,
         }))
       } else {
-        set({ error: i18n.t('store.failedToCreateNote', { status: res.status }) })
+        useToastStore
+          .getState()
+          .addToast(i18n.t('store.failedToCreateNote', { status: res.status }))
       }
     } catch {
-      set({ error: i18n.t('store.networkErrorCreateNote') })
+      useToastStore.getState().addToast(i18n.t('store.networkErrorCreateNote'))
     } finally {
       set({ isCreating: false })
     }
@@ -153,6 +166,7 @@ export const useNoteStore = create<NoteStore>((set) => ({
     set((state) => {
       const listUpdates: Partial<NoteListItem> = { updatedAt: now }
       if (updates.title !== undefined) listUpdates.title = updates.title
+      if (updates.content !== undefined) listUpdates.summary = generateSummary(updates.content)
       const newNotes = state.notes.map((n) => (n.id === id ? { ...n, ...listUpdates } : n))
       const noteFieldUpdates: Partial<NoteSelect> = { updatedAt: now }
       if (updates.title !== undefined) noteFieldUpdates.title = updates.title
@@ -195,7 +209,6 @@ export const useNoteStore = create<NoteStore>((set) => ({
   },
 
   deleteNote: async (id) => {
-    set({ error: null })
     try {
       const res = await api.notes[':id'].$delete({
         param: { id },
@@ -206,10 +219,12 @@ export const useNoteStore = create<NoteStore>((set) => ({
           currentNote: state.currentNote?.id === id ? null : state.currentNote,
         }))
       } else {
-        set({ error: i18n.t('store.failedToDeleteNote', { status: res.status }) })
+        useToastStore
+          .getState()
+          .addToast(i18n.t('store.failedToDeleteNote', { status: res.status }))
       }
     } catch {
-      set({ error: i18n.t('store.networkErrorDeleteNote') })
+      useToastStore.getState().addToast(i18n.t('store.networkErrorDeleteNote'))
     }
   },
 }))

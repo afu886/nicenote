@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 
 import type { Locale } from 'date-fns'
 import { formatDistanceToNow } from 'date-fns'
-import { ArrowRightFromLine, FileText, Plus, Search, Trash2 } from 'lucide-react'
+import { ArrowRightFromLine, Plus, Search, Trash2 } from 'lucide-react'
 import { useShallow } from 'zustand/react/shallow'
 
 import type { NoteListItem as NoteListItemType } from '@nicenote/shared'
@@ -30,6 +30,7 @@ interface NoteListItemProps {
   untitledLabel: string
   deleteLabel: string
   dateLocale: Locale
+  tick: number
 }
 
 const NoteListItem = memo(function NoteListItem({
@@ -40,6 +41,7 @@ const NoteListItem = memo(function NoteListItem({
   untitledLabel,
   deleteLabel,
   dateLocale,
+  tick: _tick,
 }: NoteListItemProps) {
   return (
     <li
@@ -54,15 +56,15 @@ const NoteListItem = memo(function NoteListItem({
         onClick={() => onSelect(note)}
         className="w-full cursor-pointer text-left outline-none"
       >
-        <div className="flex items-center gap-2 pr-8">
-          <div className={`${WEB_ROW_WITH_ICON_CLASS} overflow-hidden`}>
-            <FileText className={`${WEB_ICON_SM_CLASS} shrink-0 opacity-50`} />
-            <span className="truncate font-medium text-muted-foreground">
-              {note.title || untitledLabel}
-            </span>
-          </div>
+        <div className="truncate pr-8 font-medium text-muted-foreground">
+          {note.title || untitledLabel}
         </div>
-        <div className="mt-1 flex items-center justify-between">
+        {note.summary && (
+          <p className="mt-0.5 line-clamp-2 pr-8 text-xs leading-relaxed text-muted-foreground/60">
+            {note.summary}
+          </p>
+        )}
+        <div className="mt-1">
           <span className="text-caption whitespace-nowrap opacity-50">
             {formatDistanceToNow(new Date(note.updatedAt), {
               addSuffix: true,
@@ -86,7 +88,7 @@ const NoteListItem = memo(function NoteListItem({
 
 export function NotesSidebar({ isMobile, cancelPendingSave }: NotesSidebarProps) {
   const { t, i18n } = useTranslation()
-  useMinuteTicker()
+  const tick = useMinuteTicker()
   const [search, setSearch] = useState('')
   const deferredSearch = useDeferredValue(search)
 
@@ -132,6 +134,10 @@ export function NotesSidebar({ isMobile, cancelPendingSave }: NotesSidebarProps)
   const deleteLabel = t('sidebar.deleteNote', { title: '{{title}}' })
 
   const pendingDeleteTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map())
+  const notesRef = useRef(notes)
+  useEffect(() => {
+    notesRef.current = notes
+  }, [notes])
 
   const handleSelectNote = useCallback(
     (note: NoteListItemType) => {
@@ -141,11 +147,13 @@ export function NotesSidebar({ isMobile, cancelPendingSave }: NotesSidebarProps)
     [selectNote, isMobile]
   )
 
+  const DELETE_UNDO_TIMEOUT_MS = 5000
+
   const handleDeleteWithUndo = useCallback(
     (id: string) => {
       cancelPendingSave(id)
 
-      const noteToDelete = notes.find((n) => n.id === id)
+      const noteToDelete = notesRef.current.find((n) => n.id === id)
       if (!noteToDelete) return
 
       useNoteStore.setState((state) => ({
@@ -156,12 +164,12 @@ export function NotesSidebar({ isMobile, cancelPendingSave }: NotesSidebarProps)
       const deleteTimer = setTimeout(() => {
         pendingDeleteTimers.current.delete(id)
         void deleteNote(id)
-      }, 5000)
+      }, DELETE_UNDO_TIMEOUT_MS)
 
       pendingDeleteTimers.current.set(id, deleteTimer)
 
       addToast(t('sidebar.noteDeleted'), {
-        duration: 5000,
+        duration: DELETE_UNDO_TIMEOUT_MS,
         action: {
           label: t('sidebar.undo'),
           onClick: () => {
@@ -177,7 +185,7 @@ export function NotesSidebar({ isMobile, cancelPendingSave }: NotesSidebarProps)
         },
       })
     },
-    [cancelPendingSave, notes, deleteNote, addToast, t]
+    [cancelPendingSave, deleteNote, addToast, t]
   )
 
   const sortedNoteIds = useMemo(() => {
@@ -281,11 +289,9 @@ export function NotesSidebar({ isMobile, cancelPendingSave }: NotesSidebarProps)
         {isFetching && notes.length === 0
           ? Array.from({ length: 6 }).map((_, i) => (
               <li key={i} className="animate-pulse space-y-2 rounded-md p-3">
-                <div className={WEB_ROW_WITH_ICON_CLASS}>
-                  <div className={`${WEB_ICON_SM_CLASS} rounded bg-muted`} />
-                  <div className="h-4 w-2/3 rounded bg-muted" />
-                </div>
-                <div className="ml-6 h-3 w-1/2 rounded bg-muted" />
+                <div className="h-4 w-2/3 rounded bg-muted" />
+                <div className="h-3 w-full rounded bg-muted" />
+                <div className="h-3 w-1/2 rounded bg-muted" />
               </li>
             ))
           : filteredNotes.map((note) => (
@@ -298,6 +304,7 @@ export function NotesSidebar({ isMobile, cancelPendingSave }: NotesSidebarProps)
                 untitledLabel={untitledLabel}
                 deleteLabel={deleteLabel}
                 dateLocale={dateLocale}
+                tick={tick}
               />
             ))}
         {!isFetching && error && notes.length === 0 && (
@@ -342,7 +349,7 @@ export function NotesSidebar({ isMobile, cancelPendingSave }: NotesSidebarProps)
     <aside className="relative flex h-full flex-col overflow-hidden border-r border-border bg-muted">
       {/* Collapsed: toggle button centered in 48px strip */}
       <div
-        className={`absolute inset-y-0 left-0 flex w-12 justify-center pt-4 transition-opacity duration-200 ${
+        className={`absolute inset-y-0 left-0 flex w-12 justify-center pt-4 transition-opacity duration-300 ${
           isOpen ? 'pointer-events-none opacity-0' : 'opacity-100'
         }`}
       >
@@ -351,13 +358,15 @@ export function NotesSidebar({ isMobile, cancelPendingSave }: NotesSidebarProps)
           aria-label={t('sidebar.openSidebar')}
           className="h-fit rounded-md p-1.5 transition-colors outline-none hover:bg-accent"
         >
-          <ArrowRightFromLine className={WEB_ICON_MD_CLASS} />
+          <ArrowRightFromLine
+            className={`${WEB_ICON_MD_CLASS} transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}
+          />
         </button>
       </div>
 
       {/* Expanded: full sidebar content with fixed min-width to prevent reflow */}
       <div
-        className={`flex flex-1 flex-col overflow-hidden transition-opacity duration-200 ${
+        className={`flex flex-1 flex-col overflow-hidden transition-opacity duration-300 ${
           isOpen ? 'opacity-100' : 'pointer-events-none opacity-0'
         }`}
         style={{ minWidth: width }}

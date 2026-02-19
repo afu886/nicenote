@@ -91,7 +91,11 @@ describe('createNoteService', () => {
 
     expect(descMock).toHaveBeenCalledWith(notes.updatedAt)
     expect(selectQuery.orderBy).toHaveBeenCalled()
-    expect(result).toEqual({ data: [{ id: 'n1' }], nextCursor: null, nextCursorId: null })
+    expect(result).toEqual({
+      data: [{ id: 'n1', summary: null }],
+      nextCursor: null,
+      nextCursorId: null,
+    })
   })
 
   it('gets note by id and maps missing to null', async () => {

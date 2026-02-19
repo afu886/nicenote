@@ -51,6 +51,8 @@ const zh = {
     unexpectedError:
       '\u53d1\u751f\u4e86\u610f\u5916\u9519\u8bef\uff0c\u8bf7\u91cd\u65b0\u52a0\u8f7d\u9875\u9762\u3002',
     reload: '\u91cd\u65b0\u52a0\u8f7d',
+    editorCrashed: '\u7f16\u8f91\u5668\u9047\u5230\u9519\u8bef',
+    retry: '\u91cd\u8bd5',
   },
   store: {
     failedToFetchNotes: '\u83b7\u53d6\u7b14\u8bb0\u5217\u8868\u5931\u8d25 ({{status}})',
@@ -76,6 +78,7 @@ const zh = {
     linkUnsupportedProtocol: '\u4ec5\u652f\u6301 http\u3001https\u3001mailto\u3001tel \u534f\u8bae',
   },
   settings: {
+    title: '\u8bbe\u7f6e',
     theme: '\u4e3b\u9898',
     light: '\u6d45\u8272',
     dark: '\u6df1\u8272',

@@ -49,6 +49,8 @@ const en = {
     somethingWentWrong: 'Something went wrong',
     unexpectedError: 'An unexpected error occurred. Please reload the page.',
     reload: 'Reload',
+    editorCrashed: 'The editor encountered an error',
+    retry: 'Retry',
   },
   store: {
     failedToFetchNotes: 'Failed to fetch notes ({{status}})',
@@ -73,6 +75,7 @@ const en = {
     linkUnsupportedProtocol: 'Only http, https, mailto, and tel protocols are supported',
   },
   settings: {
+    title: 'Settings',
     theme: 'Theme',
     light: 'Light',
     dark: 'Dark',

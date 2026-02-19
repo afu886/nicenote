@@ -17,6 +17,7 @@ function createListItem() {
   return {
     id: 'n1',
     title: 'Title',
+    summary: 'Content',
     createdAt: '2026-02-14T01:02:03.000Z',
     updatedAt: '2026-02-14T01:02:03.000Z',
   }
@@ -25,7 +26,7 @@ function createListItem() {
 describe('registerNoteRoutes', () => {
   it('handles list, get, create, patch, delete flows', async () => {
     const service = {
-      list: vi.fn(async () => ({ data: [createListItem()], nextCursor: null })),
+      list: vi.fn(async () => ({ data: [createListItem()], nextCursor: null, nextCursorId: null })),
       getById: vi.fn(async () => createNote()),
       create: vi.fn(async () => createNote()),
       update: vi.fn(async () => ({ ...createNote(), title: 'Updated' })),
@@ -65,7 +66,7 @@ describe('registerNoteRoutes', () => {
 
   it('returns 404 when entity not found', async () => {
     const service = {
-      list: vi.fn(async () => ({ data: [], nextCursor: null })),
+      list: vi.fn(async () => ({ data: [], nextCursor: null, nextCursorId: null })),
       getById: vi.fn(async () => null),
       create: vi.fn(async () => createNote()),
       update: vi.fn(async () => null),
@@ -87,7 +88,7 @@ describe('registerNoteRoutes', () => {
 
   it('rejects invalid request bodies by route validators', async () => {
     const service = {
-      list: vi.fn(async () => ({ data: [], nextCursor: null })),
+      list: vi.fn(async () => ({ data: [], nextCursor: null, nextCursorId: null })),
       getById: vi.fn(async () => null),
       create: vi.fn(async () => createNote()),
       update: vi.fn(async () => null),

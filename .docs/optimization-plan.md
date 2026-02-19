@@ -1,216 +1,104 @@
 # Nicenote 优化计划
 
----
+> 更新于 2026-02-20，基于全量代码扫描。所有项目已完成。
 
-## 一、高优先级
-
-### 1.1 ⬜ 移除死代码与孤儿依赖
-
-**问题：** `ConfirmDialog.tsx` 未被引用，其依赖 `@radix-ui/react-alert-dialog` 成为孤儿依赖。`useMenuNavigation` hook 已导出但无消费者。
-
-**涉及文件：**
-
-- `apps/web/src/components/ConfirmDialog.tsx`
-- `apps/web/package.json`
-- `packages/ui/src/index.ts`（若导出了 `useMenuNavigation`）
-
-**操作：**
-
-1. 删除 `apps/web/src/components/ConfirmDialog.tsx`
-2. 从 `apps/web/package.json` 移除 `@radix-ui/react-alert-dialog`
-3. 检查并移除 `useMenuNavigation` 的无效导出
-4. 运行 `pnpm install` 更新 lockfile
+状态标记：⬜ 待处理 | 🔧 进行中 | ✅ 已完成
 
 ---
 
-### 1.2 ⬜ 修复速率限制器（per-isolate 问题）
+## 一、紧急 — Bug 修复
 
-**问题：** `apps/api/src/index.ts` 中的速率限制基于内存 `Map`，Cloudflare Workers 多 Isolate 并行时无法全局生效。
+### 1.1 ✅ 修复 `useMinuteTicker` 不生效导致时间标签冻结
 
-**涉及文件：**
+- `useMinuteTicker()` 改为返回 `tick` 值
+- `NoteEditorPane` 中 `useMemo` 依赖加入 `tick`
+- `NotesSidebar` 中 `tick` 作为 prop 传入 `NoteListItem`
 
-- `apps/api/src/index.ts`（rate limiter 中间件）
+### 1.2 ✅ 修复 `selectNote` 竞态条件
 
-**方案：**
+- 引入 `selectNoteSeq` 递增序列号
+- 响应到达时检查 `seq !== selectNoteSeq` 则丢弃
 
-- 短期：添加注释文档说明当前限制，并在响应头中添加 `X-RateLimit-*` 信息
-- 中期：迁移到 Cloudflare KV 或 Durable Objects 实现全局速率限制
+### 1.3 ✅ 修复 `SettingsDropdown` 被侧边栏裁切
 
----
-
-### 1.3 ⬜ 修复分页游标碰撞
-
-**问题：** `note-service.ts` 分页仅用 `updatedAt` 作游标，两条笔记 `updatedAt` 相同时可能跳过记录。
-
-**涉及文件：**
-
-- `apps/api/src/services/note-service.ts`（`list` 方法）
-- `packages/shared/src/schemas.ts`（`noteListQuerySchema`）
-
-**方案：**
-
-1. 改用 `(updatedAt, id)` 复合游标
-2. 查询条件从 `updatedAt < cursor` 改为 `(updatedAt < cursor) OR (updatedAt = cursor AND id < cursorId)`
-3. 更新 `noteListQuerySchema` 支持 `cursorId` 参数
+- `DropdownMenuContent` 添加 `portal` 属性
+- `aria-label` 改为 `t('settings.title')`，新增 i18n key
 
 ---
 
-## 二、中优先级
+## 二、紧急 — 安全
 
-### 2.1 ⬜ 修复 ActionToolbarButton 中 key prop 误用
+### 2.1 ✅ 添加 HTTP 安全响应头
 
-**问题：** `key` 被作为普通 prop 传入组件内部并透传到 DOM 元素，React 会发出警告。
-
-**涉及文件：**
-
-- `packages/editor/src/web/toolbar/action-toolbar-button.tsx`
-
-**方案：**
-将 `key` 从 props 解构中移除，改为在调用处使用 `key`。在组件内部使用 `id` 或其他命名替代。
+- 创建 `apps/web/public/_headers`
 
 ---
 
-### 2.2 ⬜ 依赖分类修正
+## 三、中优先级 — 性能
 
-**问题：** `@nicenote/tokens` 仅在构建脚本中使用，应为 `devDependencies`。
+### 3.1 ✅ 修复自动保存导致全部列表项重渲染
 
-**涉及文件：**
+- `notesRef = useRef(notes)` + `useEffect` 同步
+- 提取 `DELETE_UNDO_TIMEOUT_MS` 常量
 
-- `apps/web/package.json`
+### 3.2 ✅ 修复 `useIsBreakpoint` 移动端首帧布局闪烁
 
-**操作：**
-
-```bash
-cd apps/web
-pnpm remove @nicenote/tokens
-pnpm add -D @nicenote/tokens
-```
+- `useState` 初始化函数中同步读取 `window.matchMedia`
 
 ---
 
-### 2.3 ⬜ CI/CD 优化
+## 四、中优先级 — 架构
 
-**问题：**
+### 4.1 ✅ 完善错误处理：拆分 error 状态 + 用户可见反馈
 
-- 3 个 job 各自独立 `pnpm install`，增加不必要耗时
-- `deploy-api` 中 `pnpm dlx wrangler@4` 与本地 `package.json` 中的 wrangler 版本不一致
-- 根目录配置文件（`turbo.json`、`pnpm-workspace.yaml`、`package.json`）变更未触发 CI
+- `selectNote`、`createNote`、`deleteNote` 错误改用 toast 通知
+- `error` 字段仅保留给 `fetchNotes`
 
-**涉及文件：**
+### 4.2 ✅ Rate Limiter Map 清理无用 IP 条目
 
-- `.github/workflows/ci-cd.yml`
+### 4.3 ✅ 分页游标碰撞（已在先前版本中修复）
 
-**方案：**
+### 4.4 ✅ 为编辑器添加独立 ErrorBoundary
 
-1. 在 `paths` trigger 中添加根目录配置文件
-2. 统一 wrangler 使用方式（优先用 `pnpm --filter api deploy`）
-3. 评估是否将 deploy 步骤合并到 quality job 后的同一 runner 中以复用 `node_modules`
+- `EditorErrorBoundary` 包裹编辑器区域
+- 新增 i18n key：`error.editorCrashed`、`error.retry`
 
 ---
 
-### 2.4 ⬜ 统一 z-index 体系
+## 五、低优先级 — 代码清理
 
-**问题：** `z-70` 不在 Tailwind 默认 scale 中，可能违反 `tailwindcss/no-arbitrary-value` 规则。
+### 5.1 ✅ 移除未使用的 `@tailwindcss/typography`
 
-**涉及文件：**
+- 从 `index.css`、`tailwind.config.ts`、`package.json` 移除
 
-- `packages/editor/src/web/toolbar/command-dropdown-menu.tsx`
-- `packages/editor/src/web/toolbar/link-toolbar-button.tsx`
-- `packages/tokens/`（若需添加 z-index token）
+### 5.2 ✅ 删除死代码
 
-**方案：**
+- 删除 `use-menu-navigation.ts`
+- `tooltip.tsx` 移除 React 18 兼容分支和 `version` import
 
-1. 在 tokens 中定义 z-index 层级（如 `dropdown: 70`、`popover: 80`、`modal: 90`）
-2. 通过 `generate-css.ts` 生成对应 CSS 变量
-3. 替换硬编码的 `z-70` 为 token 引用
+### 5.3 ✅ 小修缮
 
----
-
-## 三、低优先级 / 代码质量
-
-### 3.1 ⬜ 侧边栏列表语义化
-
-**问题：** 笔记列表使用 `div` 嵌套，屏幕阅读器无法识别列表结构。
-
-**涉及文件：**
-
-- `apps/web/src/components/NotesSidebar.tsx`
-
-**方案：**
-
-1. 列表容器改为 `<ul role="list">`
-2. 列表项改为 `<li role="listitem">`
-3. 删除按钮 `aria-label` 改为 `aria-label={`Delete note: ${note.title}`}`
+| 问题                                                 | 状态 |
+| ---------------------------------------------------- | ---- |
+| 删除超时硬编码 → `DELETE_UNDO_TIMEOUT_MS`            | ✅   |
+| `aria-label` 未 i18n → `t('settings.title')`         | ✅   |
+| `useUnmount` 参数类型 `any` → `() => void`           | ✅   |
+| Route 测试 mock 补全 `nextCursorId`                  | ✅   |
+| 重复 `useIsBreakpoint` → 从 App 传入 `isMobile` prop | ✅   |
 
 ---
 
-### 3.2 ⬜ 将字体栈纳入 tokens 体系
+## 六、低优先级 — 可访问性 & DX
 
-**问题：** `FONT_SANS_STACK` 和 `FONT_MONO_STACK` 硬编码在 `generate-css.ts` 中，不在 tokens 包内。
+### 6.1 ✅ Toast 无障碍（已在先前版本中修复）
 
-**涉及文件：**
+- `aria-live="polite"` + `role="status"` + `aria-describedby` 已就位
 
-- `packages/tokens/src/typography.ts`
-- `apps/web/scripts/generate-css.ts`
+### 6.2 ✅ CI/CD 优化
 
-**方案：**
+- `paths` trigger 添加 `tsconfig*.json`、`eslint.config.ts`
+- pnpm store 缓存已通过 `actions/setup-node` 的 `cache: 'pnpm'` 配置
 
-1. 在 `packages/tokens/src/typography.ts` 中导出字体栈定义
-2. 在 `generate-css.ts` 中引用 token 而非硬编码
+### 6.3 ✅ 生成的 CSS tokens 已排除出 git
 
----
-
-### 3.3 ⬜ noteInsertSchema 收窄导出
-
-**问题：** `noteInsertSchema` 暴露了 `id`、`createdAt`、`updatedAt` 字段，虽然路由层使用了更严格的 `noteCreateSchema`，但共享导出存在滥用风险。
-
-**涉及文件：**
-
-- `packages/shared/src/schemas.ts`
-- `packages/shared/src/index.ts`
-
-**方案：**
-
-- 评估是否需要导出 `noteInsertSchema`；如仅用于 API 内部，可改为非导出或仅在 `apps/api` 中使用
-
----
-
-### 3.4 ⬜ Input 组件添加 forwardRef
-
-**问题：** `packages/ui` 的 `Input` 组件未使用 `forwardRef`，作为 UI 库组件不符合常规。
-
-**涉及文件：**
-
-- `packages/ui/src/components/input/input.tsx`
-
----
-
-### 3.5 ⬜ Toast 无障碍优化
-
-**问题：** `role="alert"` 隐含 `aria-live="assertive"`，对非关键通知过于激进；dismiss 按钮未关联具体 toast。
-
-**涉及文件：**
-
-- `apps/web/src/components/Toasts.tsx`
-
-**方案：**
-
-1. Toast 容器改用 `aria-live="polite"`
-2. 单条 toast 改为 `role="status"`
-3. dismiss 按钮添加 `aria-describedby` 关联对应 toast 内容
-
----
-
-### 3.7 ⬜ 生成的 index.css 与 git 管理
-
-**问题：** `index.css` 既是生成产物又纳入版本控制，token 变更产生噪声 diff。
-
-**涉及文件：**
-
-- `apps/web/src/index.css`
-- `apps/web/scripts/generate-css.ts`
-- `.gitignore`
-
-**方案：**
-
-- 将生成的 CSS 部分拆分到 `generated-tokens.css` 并加入 `.gitignore`，在 `index.css` 中 `@import` 引入
+- `generated-tokens.css` 已在 `.gitignore` 中且未被跟踪

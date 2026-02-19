@@ -39,5 +39,5 @@ function getSnapshot() {
 }
 
 export function useMinuteTicker() {
-  useSyncExternalStore(subscribe, getSnapshot, getSnapshot)
+  return useSyncExternalStore(subscribe, getSnapshot, getSnapshot)
 }

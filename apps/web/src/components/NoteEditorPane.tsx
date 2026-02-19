@@ -19,11 +19,12 @@ interface NoteEditorPaneProps {
   scheduleSave: (id: string, updates: NoteUpdateInput) => void
   saveStatus: SaveStatus
   inert?: boolean
+  isMobile: boolean
 }
 
-export function NoteEditorPane({ scheduleSave, saveStatus, inert }: NoteEditorPaneProps) {
+export function NoteEditorPane({ scheduleSave, saveStatus, inert, isMobile }: NoteEditorPaneProps) {
   const { t, i18n } = useTranslation()
-  useMinuteTicker()
+  const tick = useMinuteTicker()
   const { currentNote, createNote, updateNoteLocal } = useNoteStore(
     useShallow((state) => ({
       currentNote: state.currentNote,
@@ -103,7 +104,8 @@ export function NoteEditorPane({ scheduleSave, saveStatus, inert }: NoteEditorPa
       locale: dateLocale,
     })
     return t('editor.updated', { time })
-  }, [updatedAt, dateLocale, t])
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- tick forces re-evaluation of formatDistanceToNow
+  }, [updatedAt, dateLocale, t, tick])
 
   return (
     <main className="flex min-w-0 flex-1 flex-col" {...(inert ? { inert: true } : {})}>
@@ -131,6 +133,7 @@ export function NoteEditorPane({ scheduleSave, saveStatus, inert }: NoteEditorPa
               value={currentNote.content ?? ''}
               onChange={handleContentChange}
               labels={editorLabels}
+              isMobile={isMobile}
             />
           </div>
         </>

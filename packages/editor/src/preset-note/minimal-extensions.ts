@@ -24,7 +24,6 @@ export function createMinimalExtensions(options: MinimalExtensionOptions = {}): 
         enableClickSelection: true,
         autolink: true,
         defaultProtocol: 'https',
-        protocols: ['http', 'https', 'mailto', 'tel'],
       },
     }),
     TextAlign.configure({

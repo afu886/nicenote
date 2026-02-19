@@ -15,7 +15,9 @@ export const noteSelectSchema = z
   })
   .strict()
 
-export const noteListItemSchema = noteSelectSchema.omit({ content: true })
+export const noteListItemSchema = noteSelectSchema.omit({ content: true }).extend({
+  summary: z.string().nullable(),
+})
 
 export const noteInsertSchema = z
   .object({

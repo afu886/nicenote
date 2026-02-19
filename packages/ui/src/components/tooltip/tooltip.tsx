@@ -6,7 +6,6 @@ import {
   useContext,
   useMemo,
   useState,
-  version,
 } from 'react'
 
 import {
@@ -154,11 +153,7 @@ export const TooltipTrigger = forwardRef<HTMLElement, TooltipTriggerProps>(funct
 ) {
   const context = useTooltipContext()
   const childrenRef = isValidElement(children)
-    ? parseInt(version, 10) >= 19
-      ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (children as { props: { ref?: React.Ref<any> } }).props.ref
-      : // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (children as any).ref
+    ? (children as { props: { ref?: React.Ref<unknown> } }).props.ref
     : undefined
   const ref = useMergeRefs([context.refs.setReference, propRef, childrenRef])
 

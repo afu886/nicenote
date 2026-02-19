@@ -34,14 +34,14 @@ export function SettingsDropdown() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button
-          aria-label="Settings"
+          aria-label={t('settings.title')}
           className={`${WEB_ICON_BUTTON_CLASS} focus-visible:ring-2 focus-visible:ring-primary`}
         >
           <Settings className={WEB_ICON_MD_CLASS} />
         </button>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent align="end" className="w-48 border border-border p-1">
+      <DropdownMenuContent portal align="end" className="w-48 border border-border p-1">
         <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">
           {t('settings.theme')}
         </div>

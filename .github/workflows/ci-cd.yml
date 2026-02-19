@@ -13,6 +13,8 @@ on:
       - 'pnpm-workspace.yaml'
       - 'package.json'
       - 'pnpm-lock.yaml'
+      - 'tsconfig*.json'
+      - 'eslint.config.ts'
   pull_request:
     branches:
       - main
@@ -25,6 +27,8 @@ on:
       - 'pnpm-workspace.yaml'
       - 'package.json'
       - 'pnpm-lock.yaml'
+      - 'tsconfig*.json'
+      - 'eslint.config.ts'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}

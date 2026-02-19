@@ -55,10 +55,13 @@ app.use('*', async (c, next) => {
   let timestamps = rateLimitMap.get(ip)
   if (timestamps) {
     timestamps = timestamps.filter((t) => t > windowStart)
-    rateLimitMap.set(ip, timestamps)
+    if (timestamps.length === 0) {
+      rateLimitMap.delete(ip)
+    } else {
+      rateLimitMap.set(ip, timestamps)
+    }
   } else {
     timestamps = []
-    rateLimitMap.set(ip, timestamps)
   }
 
   const remaining = Math.max(0, RATE_LIMIT_MAX - timestamps.length)
