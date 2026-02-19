@@ -44,8 +44,16 @@ export function registerNoteRoutes<E extends Env, S extends Schema, BasePath ext
       let result: Awaited<ReturnType<typeof service.create>>
       try {
         result = await service.create(body)
-      } catch (e) {
-        return c.json({ error: 'service.create failed', detail: String(e) }, 500)
+      } catch (e: unknown) {
+        const err = e as Error & { cause?: unknown }
+        return c.json(
+          {
+            error: 'service.create failed',
+            message: err?.message,
+            cause: String(err?.cause ?? 'none'),
+          },
+          500
+        )
       }
       try {
         return c.json(noteSelectSchema.parse(result))
