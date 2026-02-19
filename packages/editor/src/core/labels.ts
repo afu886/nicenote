@@ -25,10 +25,12 @@ export interface EditorContentLabels {
   sourceLabel: string
 }
 
+import type { LinkValidationErrorKey } from '@nicenote/shared'
+
 export interface EditorLabels {
   toolbar: EditorToolbarLabels
   content: EditorContentLabels
-  translateValidationError?: (key: string) => string
+  translateValidationError?: (key: LinkValidationErrorKey) => string
 }
 
 export const DEFAULT_EDITOR_LABELS: EditorLabels = {

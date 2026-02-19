@@ -79,7 +79,7 @@ export function NoteEditorPane({
         sourcePlaceholder: t('editorContent.sourcePlaceholder'),
         sourceLabel: t('editorContent.sourceLabel'),
       },
-      translateValidationError: (key: string) => t(key as Parameters<typeof t>[0]),
+      translateValidationError: (key) => t(key),
     }),
     [t]
   )

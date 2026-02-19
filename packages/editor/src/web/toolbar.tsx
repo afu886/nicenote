@@ -18,6 +18,7 @@ import {
   Strikethrough,
 } from 'lucide-react'
 
+import type { LinkValidationErrorKey } from '@nicenote/shared'
 import { Separator, Toolbar, ToolbarGroup } from '@nicenote/ui'
 
 import { isNoteCommandId, type NoteCommandId, runNoteCommand } from '../core/commands'
@@ -41,7 +42,7 @@ interface MinimalToolbarProps {
   isMobile: boolean
   onToggleSourceMode: () => void
   toolbarLabels: EditorToolbarLabels
-  translateValidationError?: ((key: string) => string) | undefined
+  translateValidationError?: ((key: LinkValidationErrorKey) => string) | undefined
 }
 
 interface ToolbarItemRenderState {

@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import type { Editor } from '@tiptap/react'
 import { Link2, Link2Off } from 'lucide-react'
 
+import type { LinkValidationErrorKey } from '@nicenote/shared'
 import { getLinkValidationError } from '@nicenote/shared'
 import { Button, Input, Popover, PopoverContent, PopoverTrigger } from '@nicenote/ui'
 
@@ -33,7 +34,7 @@ export function LinkToolbarButton({
   shortcut?: string
   cancelLabel?: string | undefined
   applyLabel?: string | undefined
-  translateValidationError?: ((key: string) => string) | undefined
+  translateValidationError?: ((key: LinkValidationErrorKey) => string) | undefined
 }) {
   const [open, setOpen] = useState(false)
   const [hrefInput, setHrefInput] = useState('https://')
