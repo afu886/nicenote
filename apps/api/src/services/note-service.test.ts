@@ -1,9 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-const { drizzleMock, eqMock, descMock } = vi.hoisted(() => ({
+const { drizzleMock, eqMock, descMock, ltMock, orMock, andMock } = vi.hoisted(() => ({
   drizzleMock: vi.fn(),
   eqMock: vi.fn((left, right) => ({ left, right })),
   descMock: vi.fn((value) => ({ value })),
+  ltMock: vi.fn((left: unknown, right: unknown) => ({ op: 'lt', left, right })),
+  orMock: vi.fn((...args: unknown[]) => ({ op: 'or', args })),
+  andMock: vi.fn((...args: unknown[]) => ({ op: 'and', args })),
 }))
 
 vi.mock('drizzle-orm/d1', () => ({
@@ -11,10 +14,10 @@ vi.mock('drizzle-orm/d1', () => ({
 }))
 
 vi.mock('drizzle-orm/sql/expressions/conditions', () => ({
-  and: vi.fn((...args: unknown[]) => ({ op: 'and', args })),
+  and: andMock,
   eq: eqMock,
-  lt: vi.fn((left: unknown, right: unknown) => ({ op: 'lt', left, right })),
-  or: vi.fn((...args: unknown[]) => ({ op: 'or', args })),
+  lt: ltMock,
+  or: orMock,
 }))
 
 vi.mock('drizzle-orm/sql/expressions/select', () => ({
@@ -83,7 +86,7 @@ describe('createNoteService', () => {
 
   it('lists notes ordered by updatedAt desc', async () => {
     const { db, selectQuery } = createDbMock()
-    selectQuery.all.mockResolvedValue([{ id: 'n1' }])
+    selectQuery.all.mockResolvedValue([{ id: 'n1', summary: null }])
     drizzleMock.mockReturnValue(db)
 
     const service = createNoteService({ DB: {} as never })
@@ -96,6 +99,50 @@ describe('createNoteService', () => {
       nextCursor: null,
       nextCursorId: null,
     })
+  })
+
+  it('returns hasMore true and cursor when limit+1 rows exist', async () => {
+    const { db, selectQuery } = createDbMock()
+    const rows = [
+      { id: 'n1', updatedAt: '2026-02-14T02:00:00.000Z', summary: null },
+      { id: 'n2', updatedAt: '2026-02-14T01:00:00.000Z', summary: null },
+    ]
+    selectQuery.all.mockResolvedValue(rows)
+    drizzleMock.mockReturnValue(db)
+
+    const service = createNoteService({ DB: {} as never })
+    const result = await service.list({ limit: 1 })
+
+    expect(result.data).toHaveLength(1)
+    expect(result.data[0]).toEqual(rows[0])
+    expect(result.nextCursor).toBe('2026-02-14T02:00:00.000Z')
+    expect(result.nextCursorId).toBe('n1')
+  })
+
+  it('applies composite cursor condition when cursor and cursorId provided', async () => {
+    const { db, selectQuery } = createDbMock()
+    selectQuery.all.mockResolvedValue([])
+    drizzleMock.mockReturnValue(db)
+
+    const service = createNoteService({ DB: {} as never })
+    await service.list({ cursor: '2026-02-14T01:00:00.000Z', cursorId: 'n1', limit: 50 })
+
+    expect(ltMock).toHaveBeenCalledWith(notes.updatedAt, '2026-02-14T01:00:00.000Z')
+    expect(eqMock).toHaveBeenCalledWith(notes.updatedAt, '2026-02-14T01:00:00.000Z')
+    expect(orMock).toHaveBeenCalled()
+    expect(andMock).toHaveBeenCalled()
+  })
+
+  it('applies simple lt condition when only cursor provided', async () => {
+    const { db, selectQuery } = createDbMock()
+    selectQuery.all.mockResolvedValue([])
+    drizzleMock.mockReturnValue(db)
+
+    const service = createNoteService({ DB: {} as never })
+    await service.list({ cursor: '2026-02-14T01:00:00.000Z', limit: 50 })
+
+    expect(ltMock).toHaveBeenCalledWith(notes.updatedAt, '2026-02-14T01:00:00.000Z')
+    expect(orMock).not.toHaveBeenCalled()
   })
 
   it('gets note by id and maps missing to null', async () => {
@@ -113,7 +160,7 @@ describe('createNoteService', () => {
     expect(eqMock).toHaveBeenCalledWith(notes.id, 'n1')
   })
 
-  it('creates note with default title/content fallback', async () => {
+  it('creates note with sanitized content and computed summary', async () => {
     const { db, insertQuery } = createDbMock()
     drizzleMock.mockReturnValue(db)
     insertQuery.get.mockResolvedValue({ id: 'n1', title: 'Untitled', content: '' })
@@ -124,10 +171,27 @@ describe('createNoteService', () => {
     expect(insertQuery.values).toHaveBeenCalledWith({
       title: 'Untitled',
       content: '',
+      summary: null,
     })
   })
 
-  it('updates only provided fields and always updates timestamp', async () => {
+  it('sanitizes dangerous links in content on create', async () => {
+    const { db, insertQuery } = createDbMock()
+    drizzleMock.mockReturnValue(db)
+    insertQuery.get.mockResolvedValue({ id: 'n1', title: 'T', content: '[click](#)' })
+
+    const service = createNoteService({ DB: {} as never })
+    await service.create({ title: 'T', content: '[click](javascript:evil())' })
+
+    const calledWith = insertQuery.values.mock.calls[0][0] as {
+      title: string
+      content: string
+      summary: string | null
+    }
+    expect(calledWith.content).toBe('[click](#)')
+  })
+
+  it('updates content with sanitized value and recomputed summary', async () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date('2026-02-14T10:00:00.000Z'))
 
@@ -141,8 +205,38 @@ describe('createNoteService', () => {
     expect(updateQuery.set).toHaveBeenCalledWith({
       updatedAt: '2026-02-14T10:00:00.000Z',
       content: 'Updated content',
+      summary: 'Updated content',
     })
     expect(eqMock).toHaveBeenCalledWith(notes.id, 'n1')
+  })
+
+  it('title-only update does not include summary or content', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-02-14T10:00:00.000Z'))
+
+    const { db, updateQuery } = createDbMock()
+    drizzleMock.mockReturnValue(db)
+    updateQuery.get.mockResolvedValue({ id: 'n1' })
+
+    const service = createNoteService({ DB: {} as never })
+    await service.update('n1', { title: 'New Title' })
+
+    const calledWith = updateQuery.set.mock.calls[0][0] as Record<string, unknown>
+    expect(calledWith.title).toBe('New Title')
+    expect(calledWith.updatedAt).toBe('2026-02-14T10:00:00.000Z')
+    expect(calledWith).not.toHaveProperty('summary')
+    expect(calledWith).not.toHaveProperty('content')
+  })
+
+  it('update returns null when note not found', async () => {
+    const { db, updateQuery } = createDbMock()
+    drizzleMock.mockReturnValue(db)
+    updateQuery.get.mockResolvedValue(undefined)
+
+    const service = createNoteService({ DB: {} as never })
+    const result = await service.update('missing', { title: 'x' })
+
+    expect(result).toBeNull()
   })
 
   it('removes note by id and returns true when found', async () => {

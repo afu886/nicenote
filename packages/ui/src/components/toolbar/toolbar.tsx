@@ -130,7 +130,7 @@ export const Toolbar = forwardRef<HTMLDivElement, ToolbarProps>(
       <div
         ref={composedRef}
         role="toolbar"
-        aria-label="toolbar"
+        aria-label="Formatting toolbar"
         data-variant={variant}
         className={cn(
           'tiptap-toolbar flex min-h-11 items-center gap-1 border-b border-border bg-background px-2',
@@ -168,5 +168,5 @@ interface SeparatorProps {
 }
 
 export function Separator({ ref }: SeparatorProps) {
-  return <div ref={ref} role="presentation" aria-hidden="true" className="w-2 shrink-0" />
+  return <div ref={ref} role="separator" aria-orientation="vertical" className="w-2 shrink-0" />
 }

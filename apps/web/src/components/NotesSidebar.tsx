@@ -30,7 +30,6 @@ interface NoteListItemProps {
   untitledLabel: string
   deleteLabel: string
   dateLocale: Locale
-  tick: number
 }
 
 const NoteListItem = memo(function NoteListItem({
@@ -41,8 +40,10 @@ const NoteListItem = memo(function NoteListItem({
   untitledLabel,
   deleteLabel,
   dateLocale,
-  tick: _tick,
 }: NoteListItemProps) {
+  // Each item subscribes independently — NotesSidebar no longer re-renders every minute
+  useMinuteTicker()
+
   return (
     <li
       role="listitem"
@@ -88,7 +89,6 @@ const NoteListItem = memo(function NoteListItem({
 
 export function NotesSidebar({ isMobile, cancelPendingSave }: NotesSidebarProps) {
   const { t, i18n } = useTranslation()
-  const tick = useMinuteTicker()
   const [search, setSearch] = useState('')
   const deferredSearch = useDeferredValue(search)
 
@@ -115,6 +115,11 @@ export function NotesSidebar({ isMobile, cancelPendingSave }: NotesSidebarProps)
     selectNote,
     createNote,
     deleteNote,
+    removeNoteOptimistic,
+    restoreNote,
+    hasMore,
+    isFetchingMore,
+    fetchMoreNotes,
   } = useNoteStore(
     useShallow((state) => ({
       notes: state.notes,
@@ -125,6 +130,11 @@ export function NotesSidebar({ isMobile, cancelPendingSave }: NotesSidebarProps)
       selectNote: state.selectNote,
       createNote: state.createNote,
       deleteNote: state.deleteNote,
+      removeNoteOptimistic: state.removeNoteOptimistic,
+      restoreNote: state.restoreNote,
+      hasMore: state.hasMore,
+      isFetchingMore: state.isFetchingMore,
+      fetchMoreNotes: state.fetchMoreNotes,
     }))
   )
   const addToast = useToastStore((state) => state.addToast)
@@ -156,10 +166,7 @@ export function NotesSidebar({ isMobile, cancelPendingSave }: NotesSidebarProps)
       const noteToDelete = notesRef.current.find((n) => n.id === id)
       if (!noteToDelete) return
 
-      useNoteStore.setState((state) => ({
-        notes: state.notes.filter((n) => n.id !== id),
-        currentNote: state.currentNote?.id === id ? null : state.currentNote,
-      }))
+      removeNoteOptimistic(id)
 
       const deleteTimer = setTimeout(() => {
         pendingDeleteTimers.current.delete(id)
@@ -178,15 +185,30 @@ export function NotesSidebar({ isMobile, cancelPendingSave }: NotesSidebarProps)
               clearTimeout(timer)
               pendingDeleteTimers.current.delete(id)
             }
-            useNoteStore.setState((state) => ({
-              notes: [...state.notes, noteToDelete],
-            }))
+            restoreNote(noteToDelete)
           },
         },
       })
     },
-    [cancelPendingSave, deleteNote, addToast, t]
+    [cancelPendingSave, deleteNote, addToast, t, removeNoteOptimistic, restoreNote]
   )
+
+  const sentinelRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const sentinel = sentinelRef.current
+    if (!sentinel) return
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !isFetchingMore) {
+          void fetchMoreNotes()
+        }
+      },
+      { threshold: 0.1 }
+    )
+    observer.observe(sentinel)
+    return () => observer.disconnect()
+  }, [hasMore, isFetchingMore, fetchMoreNotes])
 
   const sortedNoteIds = useMemo(() => {
     return [...notes]
@@ -304,9 +326,15 @@ export function NotesSidebar({ isMobile, cancelPendingSave }: NotesSidebarProps)
                 untitledLabel={untitledLabel}
                 deleteLabel={deleteLabel}
                 dateLocale={dateLocale}
-                tick={tick}
               />
             ))}
+        <div ref={sentinelRef} className="h-1" />
+        {isFetchingMore && (
+          <li className="animate-pulse space-y-2 rounded-md p-3">
+            <div className="h-4 w-2/3 rounded bg-muted" />
+            <div className="h-3 w-1/2 rounded bg-muted" />
+          </li>
+        )}
         {!isFetching && error && notes.length === 0 && (
           <li className="py-12 text-center text-destructive">
             <p className="text-sm">{error}</p>

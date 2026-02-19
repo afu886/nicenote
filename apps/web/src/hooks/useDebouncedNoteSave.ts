@@ -3,10 +3,11 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { debounce, type NoteSelect, type NoteUpdateInput } from '@nicenote/shared'
 
 import i18n from '../i18n'
+import { useNoteStore } from '../store/useNoteStore'
 import { useToastStore } from '../store/useToastStore'
 
-const MAX_RETRIES = 3
-const RETRY_DELAYS = [1000, 2000, 4000]
+export const MAX_RETRIES = 3
+export const RETRY_DELAYS = [1000, 2000, 4000]
 const SAVED_DISPLAY_MS = 2000
 
 export type SaveStatus = 'idle' | 'unsaved' | 'saving' | 'saved'
@@ -22,7 +23,7 @@ type PendingSaveEntry = {
   saving: boolean
 }
 
-async function attemptSave(
+export async function attemptSave(
   saveNote: (id: string, updates: NoteUpdateInput) => Promise<NoteSelect>,
   id: string,
   updates: NoteUpdateInput
@@ -66,6 +67,12 @@ export function useDebouncedNoteSave({ saveNote, delayMs = 1000 }: UseDebouncedN
       return
     }
 
+    // Snapshot before save — used for rollback if all retries fail
+    const storeState = useNoteStore.getState()
+    const snapshotListItem = storeState.notes.find((n) => n.id === id)
+    const snapshotCurrentNote =
+      storeState.currentNote?.id === id ? { ...storeState.currentNote } : null
+
     pending.saving = true
     pending.updates = {}
     setSaveStatus('saving')
@@ -86,6 +93,17 @@ export function useDebouncedNoteSave({ saveNote, delayMs = 1000 }: UseDebouncedN
         savedTimerRef.current = setTimeout(() => setSaveStatus('idle'), SAVED_DISPLAY_MS)
       }
     } else {
+      // All retries exhausted — roll back optimistic state to pre-save snapshot
+      useNoteStore.setState((state) => ({
+        notes: snapshotListItem
+          ? state.notes.map((n) => (n.id === id ? snapshotListItem : n))
+          : state.notes,
+        currentNote:
+          snapshotCurrentNote !== null && state.currentNote?.id === id
+            ? snapshotCurrentNote
+            : state.currentNote,
+      }))
+
       const current = pendingSavesRef.current.get(id)
       if (current) {
         current.updates = { ...updates, ...current.updates }

@@ -94,11 +94,6 @@ app.onError((err, c) => {
 app.get('/', (c) => c.json({ status: 'ok', message: 'Nicenote API is running' }))
 app.get('/health', (c) => c.json({ status: 'ok' }))
 
-export type {
-  NoteInsertSchemaMatchesDrizzle,
-  NoteSelectSchemaMatchesDrizzle,
-} from './services/note-service'
-
 registerNoteRoutes(app, createNoteService)
 
 export type { AppType } from './routes'

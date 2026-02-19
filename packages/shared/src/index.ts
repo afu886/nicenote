@@ -7,8 +7,10 @@
 // ============================================================
 // 工具函数
 // ============================================================
+export { DEFAULT_NOTE_TITLE, LANG_STORAGE_KEY, THEME_STORAGE_KEY } from './constants'
 export { debounce, throttle } from './debounce'
 export { toKebabCase } from './parsers'
+export { sanitizeContent } from './sanitize'
 export { generateSummary } from './summary'
 export type { LinkValidationErrorKey } from './validators'
 export { getLinkValidationError } from './validators'

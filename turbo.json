@@ -5,6 +5,14 @@
       "dependsOn": ["^build"],
       "outputs": ["dist/**"]
     },
+    "generate:css": {
+      "dependsOn": ["^build"],
+      "outputs": ["src/generated-tokens.css"]
+    },
+    "web#build": {
+      "dependsOn": ["^build", "generate:css"],
+      "outputs": ["dist/**"]
+    },
     "lint": {
       "dependsOn": ["^lint"]
     },

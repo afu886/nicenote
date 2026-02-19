@@ -3,10 +3,10 @@ import { and, eq, lt, or } from 'drizzle-orm/sql/expressions/conditions'
 import { desc } from 'drizzle-orm/sql/expressions/select'
 
 import {
+  DEFAULT_NOTE_TITLE,
   generateSummary,
   type NoteContractService,
-  type NoteInsert,
-  type NoteSelect,
+  sanitizeContent,
 } from '@nicenote/shared'
 
 import { notes } from '../db/schema'
@@ -15,19 +15,16 @@ export type NoteServiceBindings = {
   DB: Parameters<typeof drizzle>[0]
 }
 
-type DrizzleNoteSelect = typeof notes.$inferSelect
 type DrizzleNoteInsert = typeof notes.$inferInsert
 
-type IsExact<A, B> =
-  (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2
-    ? (<T>() => T extends B ? 1 : 2) extends <T>() => T extends A ? 1 : 2
-      ? true
-      : false
-    : false
-type Assert<T extends true> = T
-
-export type NoteSelectSchemaMatchesDrizzle = Assert<IsExact<NoteSelect, DrizzleNoteSelect>>
-export type NoteInsertSchemaMatchesDrizzle = Assert<IsExact<NoteInsert, DrizzleNoteInsert>>
+// Columns returned for single-note endpoints (matches NoteSelect contract)
+const NOTE_SELECT_COLUMNS = {
+  id: notes.id,
+  title: notes.title,
+  content: notes.content,
+  createdAt: notes.createdAt,
+  updatedAt: notes.updatedAt,
+} as const
 
 export function createNoteService(bindings: NoteServiceBindings): NoteContractService {
   const db = drizzle(bindings.DB)
@@ -47,7 +44,7 @@ export function createNoteService(bindings: NoteServiceBindings): NoteContractSe
         .select({
           id: notes.id,
           title: notes.title,
-          content: notes.content,
+          summary: notes.summary,
           createdAt: notes.createdAt,
           updatedAt: notes.updatedAt,
         })
@@ -57,30 +54,32 @@ export function createNoteService(bindings: NoteServiceBindings): NoteContractSe
         .limit(limit + 1)
         .all()
       const hasMore = rows.length > limit
-      const data = (hasMore ? rows.slice(0, limit) : rows).map(({ content, ...rest }) => ({
-        ...rest,
-        summary: generateSummary(content),
-      }))
+      const data = hasMore ? rows.slice(0, limit) : rows
       const last = data[data.length - 1]
       const nextCursor = hasMore && last ? last.updatedAt : null
       const nextCursorId = hasMore && last ? last.id : null
       return { data, nextCursor, nextCursorId }
     },
+
     getById: async (id) => {
-      const result = await db.select().from(notes).where(eq(notes.id, id)).get()
+      const result = await db.select(NOTE_SELECT_COLUMNS).from(notes).where(eq(notes.id, id)).get()
       return result ?? null
     },
-    create: async (body) => {
-      const values: Pick<DrizzleNoteInsert, 'title' | 'content'> = {
-        title: body.title || 'Untitled',
-        content: body.content ?? '',
-      }
 
-      return db.insert(notes).values(values).returning().get()
+    create: async (body) => {
+      const sanitized = sanitizeContent(body.content ?? '')
+      const values: Pick<DrizzleNoteInsert, 'title' | 'content' | 'summary'> = {
+        title: body.title || DEFAULT_NOTE_TITLE,
+        content: sanitized,
+        summary: generateSummary(sanitized),
+      }
+      const result = await db.insert(notes).values(values).returning(NOTE_SELECT_COLUMNS).get()
+      return result
     },
+
     update: async (id, body) => {
       const updates: Pick<DrizzleNoteInsert, 'updatedAt'> &
-        Partial<Pick<DrizzleNoteInsert, 'title' | 'content'>> = {
+        Partial<Pick<DrizzleNoteInsert, 'title' | 'content' | 'summary'>> = {
         updatedAt: new Date().toISOString(),
       }
 
@@ -89,12 +88,20 @@ export function createNoteService(bindings: NoteServiceBindings): NoteContractSe
       }
 
       if (body.content !== undefined) {
-        updates.content = body.content
+        const sanitized = sanitizeContent(body.content)
+        updates.content = sanitized
+        updates.summary = generateSummary(sanitized)
       }
 
-      const result = await db.update(notes).set(updates).where(eq(notes.id, id)).returning().get()
+      const result = await db
+        .update(notes)
+        .set(updates)
+        .where(eq(notes.id, id))
+        .returning(NOTE_SELECT_COLUMNS)
+        .get()
       return result ?? null
     },
+
     remove: async (id) => {
       const deleted = await db
         .delete(notes)
