@@ -25,7 +25,6 @@
   },
   "private": true,
   "scripts": {
-    "build": "tsc -p tsconfig.json",
     "build:template": "vite build",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit"
