@@ -2,11 +2,14 @@
 node_modules/
 .pnpm-store/
 
-# Build / Output
+# Build / Output / Cache
 dist/
 build/
 out/
 .turbo/
+.swc/
+.vite/
+.cache/
 
 # Environment Variables
 .env
@@ -43,6 +46,14 @@ Thumbs.db
 
 # Tailwind / PostCSS cache
 .tailwindcss-cache/
+
+# React Native
+ios/Pods/
+ios/build/
+*.xcworkspace
+android/.gradle/
+android/app/build/
+*.jks
 
 # Cloudflare / Hono / Workers
 .wrangler/
