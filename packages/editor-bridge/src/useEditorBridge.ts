@@ -1,39 +1,82 @@
-import type { EditorBridgeState } from './types'
+import { useCallback, useRef, useState } from 'react'
+import type { WebView } from 'react-native-webview'
 
-// TODO: Implement the editor bridge hook
-//
-// This hook manages the communication between React Native and the WebView
-// editor. It will:
-//   1. Hold a ref to the WebView component
-//   2. Provide methods to send EditorCommands
-//   3. Process incoming EditorEvents
-//   4. Track editor state (ready, focused, content)
-//
-// Usage:
-//   const { isReady, content, setContent, focus } = useEditorBridge()
-//   <EditorWebView ref={webViewRef} {...bridgeProps} />
+import type { BridgeMessage, EditorBridgeState, EditorCommand, EditorEvent } from './types'
 
-export function useEditorBridge(): EditorBridgeState {
-  // TODO: Implement with useRef for WebView, useState for state tracking,
-  // and useCallback for command dispatching.
-  return {
-    isReady: false,
-    isFocused: false,
-    content: '',
-    setContent: (_content: string) => {
-      // TODO: Send SET_CONTENT command to WebView
+export interface UseEditorBridgeOptions {
+  initialContent?: string
+  onContentChange?: (content: string) => void
+  onReady?: () => void
+  onFocusChange?: (focused: boolean) => void
+}
+
+export interface EditorBridgeHandle {
+  state: EditorBridgeState
+  webViewRef: React.RefObject<WebView | null>
+  /** Pass this to WebView's onMessage prop */
+  onMessage: (raw: string) => void
+}
+
+export function useEditorBridge(opts: UseEditorBridgeOptions = {}): EditorBridgeHandle {
+  const webViewRef = useRef<WebView | null>(null)
+  const [isReady, setIsReady] = useState(false)
+  const [isFocused, setIsFocused] = useState(false)
+  const [content, setContent] = useState(opts.initialContent ?? '')
+
+  const send = useCallback((cmd: EditorCommand) => {
+    if (!webViewRef.current) return
+    const msg: BridgeMessage<EditorCommand> = { source: 'nicenote-editor', data: cmd }
+    // injectJavaScript is reliable across platforms and avoids origin restrictions
+    webViewRef.current.injectJavaScript(
+      `(function(){` +
+        `var e=new MessageEvent('message',{data:${JSON.stringify(JSON.stringify(msg))}});` +
+        `window.dispatchEvent(e);document.dispatchEvent(e);` +
+        `})(); true;`
+    )
+  }, [])
+
+  const onMessage = useCallback(
+    (raw: string) => {
+      let msg: BridgeMessage<EditorEvent>
+      try {
+        msg = JSON.parse(raw)
+      } catch {
+        return
+      }
+      if (msg.source !== 'nicenote-editor') return
+
+      const ev = msg.data
+      switch (ev.type) {
+        case 'READY':
+          setIsReady(true)
+          if (opts.initialContent) send({ type: 'SET_CONTENT', payload: opts.initialContent })
+          opts.onReady?.()
+          break
+        case 'CONTENT_CHANGED':
+          setContent(ev.payload)
+          opts.onContentChange?.(ev.payload)
+          break
+        case 'FOCUS_CHANGED':
+          setIsFocused(ev.payload)
+          opts.onFocusChange?.(ev.payload)
+          break
+        case 'HEIGHT_CHANGED':
+          break
+      }
     },
-    focus: () => {
-      // TODO: Send FOCUS command to WebView
-    },
-    blur: () => {
-      // TODO: Send BLUR command to WebView
-    },
-    setEditable: (_editable: boolean) => {
-      // TODO: Send SET_EDITABLE command to WebView
-    },
-    toggleSourceMode: () => {
-      // TODO: Send TOGGLE_SOURCE_MODE command to WebView
-    },
+    [opts.initialContent, opts.onContentChange, opts.onReady, opts.onFocusChange, send]
+  )
+
+  const state: EditorBridgeState = {
+    isReady,
+    isFocused,
+    content,
+    setContent: useCallback((c: string) => send({ type: 'SET_CONTENT', payload: c }), [send]),
+    focus: useCallback(() => send({ type: 'FOCUS' }), [send]),
+    blur: useCallback(() => send({ type: 'BLUR' }), [send]),
+    setEditable: useCallback((e: boolean) => send({ type: 'SET_EDITABLE', payload: e }), [send]),
+    toggleSourceMode: useCallback(() => send({ type: 'TOGGLE_SOURCE_MODE' }), [send]),
   }
+
+  return { state, webViewRef, onMessage }
 }

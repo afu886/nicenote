@@ -6,4 +6,5 @@ export type {
   EditorEvent,
   EditorWebViewProps,
 } from './types'
+export type { EditorBridgeHandle, UseEditorBridgeOptions } from './useEditorBridge'
 export { useEditorBridge } from './useEditorBridge'

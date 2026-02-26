@@ -4,7 +4,8 @@
   "dependencies": {
     "zustand": "^5.0.0",
     "immer": "^10.0.0",
-    "@nicenote/shared": "workspace:*"
+    "@nicenote/shared": "workspace:*",
+    "@nicenote/database": "workspace:*"
   },
   "peerDependencies": {
     "react": "^19.0.0"

@@ -1,6 +1,15 @@
 {
   "name": "@nicenote/editor-bridge",
   "version": "0.0.1",
+  "dependencies": {
+    "@tiptap/core": "^2.14.0",
+    "@tiptap/starter-kit": "^2.14.0",
+    "@tiptap/extension-placeholder": "^2.14.0",
+    "@tiptap/extension-text-align": "^2.14.0",
+    "@tiptap/extension-typography": "^2.14.0",
+    "@tiptap/extension-link": "^2.14.0",
+    "tiptap-markdown": "^0.8.10"
+  },
   "peerDependencies": {
     "react": "^19.0.0",
     "react-native": ">=0.79.0",
@@ -8,7 +17,8 @@
   },
   "devDependencies": {
     "typescript": "~5.9.3",
-    "@types/react": "^19.0.0"
+    "@types/react": "^19.0.0",
+    "vite": "^6.0.0"
   },
   "exports": {
     ".": "./src/index.ts"
@@ -16,6 +26,7 @@
   "private": true,
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "build:template": "vite build",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit"
   },
