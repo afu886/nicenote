@@ -9,6 +9,7 @@ pnpm --filter @nicenote/editor-bridge build:template
 cd apps/desktop
 npx react-native-macos-init --overwrite # macOS
 npx react-native-windows-init --version 0.76 # Windows
+pnpm dlx react-native-windows-init@0.76 --overwrite --version 0.76 // Powershell
 
 # 3. 启动
 

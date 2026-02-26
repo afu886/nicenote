@@ -1,34 +1,37 @@
-/* eslint-disable no-undef, @typescript-eslint/no-require-imports */
-const { getDefaultConfig, mergeConfig } = require('@react-native/metro-config')
-const path = require('path')
+const {getDefaultConfig, mergeConfig} = require('@react-native/metro-config');
 
-const monorepoRoot = path.resolve(__dirname, '../..')
+const fs = require('fs');
+const path = require('path');
+const exclusionList = require('metro-config/src/defaults/exclusionList');
 
-const defaultConfig = getDefaultConfig(__dirname)
+const rnwPath = fs.realpathSync(
+  path.resolve(require.resolve('react-native-windows/package.json'), '..'),
+);
+
+//
 
 /**
- * Metro config for nicenote-desktop
+ * Metro configuration
+ * https://facebook.github.io/metro/docs/configuration
  *
- * Key concerns:
- *  1. Resolve workspace packages from the monorepo root
- *  2. Support .macos and .windows platform extensions
- *  3. Allow require() of .html assets (editor bundle)
+ * @type {import('metro-config').MetroConfig}
  */
+
 const config = {
-  watchFolders: [monorepoRoot],
-
+  //
   resolver: {
-    nodeModulesPaths: [
-      path.resolve(__dirname, 'node_modules'),
-      path.resolve(monorepoRoot, 'node_modules'),
-    ],
-    // Prefer platform-specific extensions: Button.macos.tsx > Button.tsx
-    platforms: ['macos', 'windows', 'native', 'ios', 'android'],
-    unstable_enablePackageExports: false,
-    // Teach Metro how to handle .html files (for the editor bundle)
-    assetExts: [...(defaultConfig.resolver.assetExts ?? []), 'html'],
+    blockList: exclusionList([
+      // This stops "npx @react-native-community/cli run-windows" from causing the metro server to crash if its already running
+      new RegExp(
+        `${path.resolve(__dirname, 'windows').replace(/[/\\]/g, '/')}.*`,
+      ),
+      // This prevents "npx @react-native-community/cli run-windows" from hitting: EBUSY: resource busy or locked, open msbuild.ProjectImports.zip or other files produced by msbuild
+      new RegExp(`${rnwPath}/build/.*`),
+      new RegExp(`${rnwPath}/target/.*`),
+      /.*\.ProjectImports\.zip/,
+    ]),
+    //
   },
-
   transformer: {
     getTransformOptions: async () => ({
       transform: {
@@ -37,6 +40,6 @@ const config = {
       },
     }),
   },
-}
+};
 
-module.exports = mergeConfig(defaultConfig, config)
+module.exports = mergeConfig(getDefaultConfig(__dirname), config);

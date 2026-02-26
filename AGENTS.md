@@ -144,7 +144,7 @@ Types/Schemas: NoteSelect, NoteInsert, NoteCreateInput, NoteUpdateInput, NoteLis
 ## Desktop Setup Steps (one-time, per platform)
 
 1. `cd apps/desktop && npx react-native-macos-init --overwrite` (macOS target)
-2. `cd apps/desktop && npx react-native-windows-init --overwrite --version 0.76` (Windows target)
+2. `cd apps/desktop && pnpm exec react-native init-windows --overwrite` (Windows target — `react-native-windows-init` was deprecated for RNW 0.76+; use `init-windows` via `@react-native-windows/cli` bundled with `react-native-windows@0.77.0`)
 3. Link native modules: op-sqlite, react-native-webview, react-native-fs
 4. Implement `NNSystemTray` and `NNGlobalShortcuts` native modules in Xcode/VS
 5. Run `pnpm --filter @nicenote/editor-bridge build:template` to build the editor bundle

@@ -23,9 +23,4 @@ export default defineConfig({
       },
     },
   },
-  resolve: {
-    alias: {
-      '@tiptap': resolve(__dirname, '../../node_modules/@tiptap'),
-    },
-  },
 })
