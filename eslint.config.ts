@@ -34,7 +34,6 @@ export default tseslint.config(
       '**/*.d.ts',
       'apps/mobile/*.js',
       'apps/mobile/index.js',
-      'apps/desktop/*.js',
       'packages/editor-bridge/src/assets/**',
     ],
   },

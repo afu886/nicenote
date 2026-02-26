@@ -8,8 +8,7 @@ A full-stack note-taking app with rich text editing, deployed on Cloudflare.
 apps/
   api/          # Hono + Cloudflare Workers + D1 (SQLite) backend
   web/          # React 19 + Vite 7 + TailwindCSS v4 frontend
-  mobile/       # React Native 0.79 (iOS/Android)
-  desktop/      # React Native + macOS/Windows (react-native-macos, react-native-windows)
+  mobile/       # React Native 0.82 (iOS/Android)
 packages/
   database/     # op-sqlite + Drizzle ORM (native apps)
   store/        # Zustand v5 + Immer (native apps)
@@ -26,7 +25,7 @@ packages/
 - **Runtime**: pnpm v10 monorepo + Turborepo
 - **Language**: TypeScript 5.9 (strict mode, `bundler` module resolution)
 - **Frontend**: React 19, Vite 7, TailwindCSS v4, Zustand v5
-- **Native**: React Native 0.79 (iOS/Android), react-native-macos, react-native-windows
+- **Native**: React Native 0.82 (iOS/Android)
 - **Backend**: Hono v4, Cloudflare Workers, D1 (SQLite), Drizzle ORM
 - **Database (Native)**: op-sqlite, Drizzle ORM
 - **Validation**: Zod v4 + @hono/zod-validator
@@ -56,10 +55,11 @@ pnpm --filter web dev            # Vite dev server (port 5173)
 pnpm --filter web build          # Build (generates CSS from tokens first)
 pnpm --filter web generate:css   # Regenerate CSS from design tokens
 
-# Desktop & Native (apps/desktop & packages/editor-bridge)
-pnpm --filter @nicenote/editor-bridge build:template # Build Tiptap editor HTML bundle (must run before launching desktop app)
-pnpm --filter nicenote-desktop macos                 # Launch on macOS
-pnpm --filter nicenote-desktop windows               # Launch on Windows
+# Mobile & Native (apps/mobile & packages/editor-bridge)
+pnpm --filter @nicenote/editor-bridge build:template # Build Tiptap editor HTML bundle
+pnpm --filter nicenote-mobile start                  # Metro dev server
+pnpm --filter nicenote-mobile ios                    # Launch on iOS
+pnpm --filter nicenote-mobile android                # Launch on Android
 ```
 
 ## Architecture
@@ -117,15 +117,6 @@ Hooks: useIsBreakpoint, useThrottledCallback, useComposedRef, useMenuNavigation.
 Exports: async utils (debounce, throttle), parsers (toKebabCase), validators (getLinkValidationError).
 Types/Schemas: NoteSelect, NoteInsert, NoteCreateInput, NoteUpdateInput, NoteListItem, NoteListQuery, NoteListResult, NoteContractService, and corresponding Zod schemas.
 
-### Desktop Architecture (PLAN-desktop.md)
-
-- **Database**: `initDatabase()` → op-sqlite opens `nicenote.db` → Drizzle wraps it → services (NoteService, FolderService, TagService) do CRUD
-- **Migrations**: Synchronous JSI, run at startup via `runMigrations()`, FTS5 enabled
-- **Store**: Zustand stores call `getDatabase()` lazily; note-store has 1s debounced auto-save
-- **Editor Bridge**: EditorWebView (react-native-webview) loads `src/assets/editor.html`; build with `pnpm --filter @nicenote/editor-bridge build:template`
-- **Desktop Layout**: 3-panel (Sidebar 220px | NoteList 260px | Editor flex:1), custom TitleBar (38px height)
-- **Native Modules**: SystemTray (`NNSystemTray`), GlobalShortcuts (`NNGlobalShortcuts`) — declared in `apps/desktop/src/native/`
-
 ## Conventions
 
 - Internal packages use `workspace:*` protocol
@@ -140,14 +131,6 @@ Types/Schemas: NoteSelect, NoteInsert, NoteCreateInput, NoteUpdateInput, NoteLis
 - **Native ID Generation**: `nanoid/non-secure` for id generation in native (no crypto dependency)
 - **Native Store**: Store files use lazy `svc()` accessor (creates new service instance each call — stateless)
 - **Native DB**: op-sqlite is a peer dependency of `@nicenote/database`
-
-## Desktop Setup Steps (one-time, per platform)
-
-1. `cd apps/desktop && npx react-native-macos-init --overwrite` (macOS target)
-2. `cd apps/desktop && pnpm exec react-native init-windows --overwrite` (Windows target — `react-native-windows-init` was deprecated for RNW 0.76+; use `init-windows` via `@react-native-windows/cli` bundled with `react-native-windows@0.77.0`)
-3. Link native modules: op-sqlite, react-native-webview, react-native-fs
-4. Implement `NNSystemTray` and `NNGlobalShortcuts` native modules in Xcode/VS
-5. Run `pnpm --filter @nicenote/editor-bridge build:template` to build the editor bundle
 
 ## Deployment
 

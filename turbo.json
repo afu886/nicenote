@@ -43,18 +43,6 @@
       "dependsOn": ["^build"],
       "cache": false
     },
-    "nicenote-desktop#start": {
-      "cache": false,
-      "persistent": true
-    },
-    "nicenote-desktop#macos": {
-      "dependsOn": ["^build", "@nicenote/editor-bridge#build:template"],
-      "cache": false
-    },
-    "nicenote-desktop#windows": {
-      "dependsOn": ["^build", "@nicenote/editor-bridge#build:template"],
-      "cache": false
-    },
     "@nicenote/editor-bridge#build:template": {
       "outputs": ["src/assets/editor.html"],
       "dependsOn": ["^build"]
