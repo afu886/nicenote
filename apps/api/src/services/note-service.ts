@@ -119,7 +119,7 @@ export function createNoteService(bindings: NoteServiceBindings): NoteContractSe
         updates.title = body.title
       }
 
-      if (body.content !== undefined && body.content !== null) {
+      if (body.content !== undefined) {
         const sanitized = sanitizeContent(body.content)
         updates.content = sanitized
         updates.summary = generateSummary(sanitized)
@@ -136,16 +136,16 @@ export function createNoteService(bindings: NoteServiceBindings): NoteContractSe
         .returning(NOTE_SELECT_COLUMNS)
         .get()
 
-      // Sync FTS
-      if (result) {
-        const ftsUpdates: string[] = []
-        if (updates.title !== undefined) ftsUpdates.push('title')
-        if (updates.content !== undefined) ftsUpdates.push('content')
-        if (updates.summary !== undefined) ftsUpdates.push('summary')
-        if (ftsUpdates.length > 0) {
+      // Sync FTS（仅当有可搜索字段变更时）
+      if (result && (updates.title !== undefined || updates.content !== undefined)) {
+        if (updates.content !== undefined) {
+          // title/content 均可能更新，一并同步 summary
           await db.run(
             sql`UPDATE notes_fts SET title = ${result.title}, content = ${result.content ?? ''}, summary = ${updates.summary ?? ''} WHERE id = ${id}`
           )
+        } else {
+          // 仅标题更新，不修改 content / summary
+          await db.run(sql`UPDATE notes_fts SET title = ${result.title} WHERE id = ${id}`)
         }
       }
 
@@ -168,7 +168,15 @@ export function createNoteService(bindings: NoteServiceBindings): NoteContractSe
     },
 
     search: async ({ q, limit }) => {
-      const ftsQuery = q.replace(/['"]/g, '').trim() + '*'
+      // 小写化防止 AND/OR/NOT/NEAR 被解析为 FTS5 运算符（FTS5 默认大小写不敏感，小写不影响结果）
+      // 再去除其余元字符，避免语法错误
+      const sanitized = q
+        .toLowerCase()
+        .replace(/['"*^()\\-]/g, ' ')
+        .trim()
+        .replace(/\s+/g, ' ')
+      if (!sanitized) return []
+      const ftsQuery = sanitized + '*'
       const rows = await db.all<NoteSearchResult>(
         sql`SELECT n.id, n.title, n.folder_id AS folderId, n.created_at AS createdAt, n.updated_at AS updatedAt, n.summary, snippet(notes_fts, 2, '<mark>', '</mark>', '...', 32) AS snippet FROM notes_fts fts INNER JOIN notes n ON n.id = fts.id WHERE notes_fts MATCH ${ftsQuery} ORDER BY rank LIMIT ${limit}`
       )

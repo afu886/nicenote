@@ -9,11 +9,12 @@ export function generateSummary(
   const plain = content
     .replace(/```[\s\S]*?```/g, '') // code blocks
     .replace(/^#{1,6}\s+/gm, '') // headers
+    .replace(/^(-{3,}|\*{3,}|_{3,})$/gm, '') // horizontal rules (---, ***, ___)
     .replace(/\*\*(.+?)\*\*/g, '$1') // bold
     .replace(/\*(.+?)\*/g, '$1') // italic
     .replace(/`(.+?)`/g, '$1') // inline code
+    .replace(/!\[.*?\]\(.+?\)/g, '') // images（必须在 links 之前，否则 link 正则会先消耗掉 ![alt] 部分）
     .replace(/\[(.+?)\]\(.+?\)/g, '$1') // links
-    .replace(/!\[.*?\]\(.+?\)/g, '') // images
     .replace(/>\s+/g, '') // blockquotes
     .replace(/[-*+]\s+/gm, '') // list markers
     .replace(/\d+\.\s+/gm, '') // numbered list markers

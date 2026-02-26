@@ -2,7 +2,7 @@ import { z } from 'zod'
 
 const isoDateTimeSchema = z.string().datetime({ offset: true })
 
-const MAX_TAG_NAME_LENGTH = 50
+export const MAX_TAG_NAME_LENGTH = 50
 const TAG_COLOR_REGEX = /^#[0-9a-fA-F]{6}$/
 
 export const tagSelectSchema = z

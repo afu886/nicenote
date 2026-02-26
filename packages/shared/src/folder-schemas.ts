@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-const MAX_FOLDER_NAME_LENGTH = 200
+export const MAX_FOLDER_NAME_LENGTH = 200
 
 export const folderSelectSchema = z
   .object({

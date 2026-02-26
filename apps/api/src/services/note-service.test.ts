@@ -1,12 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-const { drizzleMock, eqMock, descMock, ltMock, orMock, andMock } = vi.hoisted(() => ({
+const { drizzleMock, eqMock, descMock, ltMock, orMock, andMock, inArrayMock } = vi.hoisted(() => ({
   drizzleMock: vi.fn(),
   eqMock: vi.fn((left, right) => ({ left, right })),
   descMock: vi.fn((value) => ({ value })),
   ltMock: vi.fn((left: unknown, right: unknown) => ({ op: 'lt', left, right })),
   orMock: vi.fn((...args: unknown[]) => ({ op: 'or', args })),
   andMock: vi.fn((...args: unknown[]) => ({ op: 'and', args })),
+  inArrayMock: vi.fn((col: unknown, vals: unknown) => ({ op: 'inArray', col, vals })),
 }))
 
 vi.mock('drizzle-orm/d1', () => ({
@@ -16,6 +17,7 @@ vi.mock('drizzle-orm/d1', () => ({
 vi.mock('drizzle-orm/sql/expressions/conditions', () => ({
   and: andMock,
   eq: eqMock,
+  inArray: inArrayMock,
   lt: ltMock,
   or: orMock,
 }))
@@ -73,6 +75,8 @@ function createDbMock() {
     insert: vi.fn(() => insertQuery),
     update: vi.fn(() => updateQuery),
     delete: vi.fn(() => deleteQuery),
+    run: vi.fn().mockResolvedValue(undefined), // FTS 操作使用
+    all: vi.fn().mockResolvedValue([]), // search 原始 SQL 查询使用
   }
 
   return { db, selectQuery, insertQuery, updateQuery, deleteQuery }
@@ -172,6 +176,7 @@ describe('createNoteService', () => {
       title: 'Untitled',
       content: '',
       summary: null,
+      folderId: null,
     })
   })
 
@@ -261,5 +266,51 @@ describe('createNoteService', () => {
     const result = await service.remove('nonexistent')
 
     expect(result).toBe(false)
+  })
+
+  it('search returns empty array when sanitized query is empty', async () => {
+    const { db } = createDbMock()
+    drizzleMock.mockReturnValue(db)
+
+    const service = createNoteService({ DB: {} as never })
+    // 全为元字符，sanitize 后为空字符串，不应发起 FTS 查询
+    const result = await service.search({ q: '()"\'', limit: 10 })
+
+    expect(result).toEqual([])
+    expect(db.all).not.toHaveBeenCalled()
+  })
+
+  it('search sanitizes FTS operators via toLowerCase', async () => {
+    const { db } = createDbMock()
+    drizzleMock.mockReturnValue(db)
+
+    const service = createNoteService({ DB: {} as never })
+    // AND/OR/NOT/NEAR 大写时是 FTS5 运算符；toLowerCase 后变为小写，不再触发运算符解析
+    await service.search({ q: 'AND OR NOT NEAR', limit: 10 })
+
+    expect(db.all).toHaveBeenCalled()
+  })
+
+  it('search returns results from db.all', async () => {
+    const mockRows = [
+      {
+        id: 'n1',
+        title: 'Hello',
+        folderId: null,
+        createdAt: '2026-02-14T01:00:00.000Z',
+        updatedAt: '2026-02-14T01:00:00.000Z',
+        summary: null,
+        snippet: 'Hello <mark>world</mark>',
+      },
+    ]
+    const { db } = createDbMock()
+    db.all.mockResolvedValue(mockRows)
+    drizzleMock.mockReturnValue(db)
+
+    const service = createNoteService({ DB: {} as never })
+    const result = await service.search({ q: 'world', limit: 5 })
+
+    expect(db.all).toHaveBeenCalled()
+    expect(result).toEqual(mockRows)
   })
 })

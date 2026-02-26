@@ -21,7 +21,6 @@ export { getLinkValidationError } from './validators'
 export type {
   NoteContractService,
   NoteCreateInput,
-  NoteInsert,
   NoteListItem,
   NoteListQuery,
   NoteListResult,
@@ -31,6 +30,8 @@ export type {
   NoteUpdateInput,
 } from './schemas'
 export {
+  MAX_CONTENT_LENGTH,
+  MAX_TITLE_LENGTH,
   noteCreateSchema,
   noteIdParamSchema,
   noteListItemSchema,
@@ -55,6 +56,7 @@ export {
   folderIdParamSchema,
   folderSelectSchema,
   folderUpdateSchema,
+  MAX_FOLDER_NAME_LENGTH,
 } from './folder-schemas'
 
 // ============================================================
@@ -62,6 +64,7 @@ export {
 // ============================================================
 export type { TagContractService, TagCreateInput, TagSelect, TagUpdateInput } from './tag-schemas'
 export {
+  MAX_TAG_NAME_LENGTH,
   noteTagParamSchema,
   tagCreateSchema,
   tagIdParamSchema,

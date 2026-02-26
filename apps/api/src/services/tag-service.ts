@@ -6,7 +6,7 @@ import type { TagContractService } from '@nicenote/shared'
 
 import { noteTags, tags } from '../db/schema'
 
-import type { NoteServiceBindings } from './note-service'
+type ServiceBindings = { DB: Parameters<typeof drizzle>[0] }
 
 const TAG_SELECT_COLUMNS = {
   id: tags.id,
@@ -15,7 +15,7 @@ const TAG_SELECT_COLUMNS = {
   createdAt: tags.createdAt,
 } as const
 
-export function createTagService(bindings: NoteServiceBindings): TagContractService {
+export function createTagService(bindings: ServiceBindings): TagContractService {
   const db = drizzle(bindings.DB)
 
   return {
@@ -37,10 +37,10 @@ export function createTagService(bindings: NoteServiceBindings): TagContractServ
     },
 
     update: async (id, body) => {
-      const updates: Record<string, unknown> = {}
-
-      if (body.name !== undefined) updates.name = body.name
-      if (body.color !== undefined) updates.color = body.color
+      const updates: Partial<typeof tags.$inferInsert> = {
+        ...(body.name !== undefined && { name: body.name }),
+        ...(body.color !== undefined && { color: body.color }),
+      }
 
       const result = await db
         .update(tags)
@@ -60,9 +60,13 @@ export function createTagService(bindings: NoteServiceBindings): TagContractServ
       try {
         await db.insert(noteTags).values({ noteId, tagId }).run()
         return true
-      } catch {
-        // Duplicate or FK violation
-        return false
+      } catch (e) {
+        // UNIQUE 约束失败：标签已存在，幂等返回 true
+        // 其他错误（FK 约束、网络故障等）向上抛出，由全局错误处理器返回 500
+        if (e instanceof Error && e.message.includes('UNIQUE constraint failed')) {
+          return true
+        }
+        throw e
       }
     },
 

@@ -115,7 +115,7 @@ export function updateNoteLocal(queryClient: QueryClient, id: string, updates: N
   updateNoteInListCache(queryClient, id, (note) => {
     const patch: Partial<NoteListItem> = { updatedAt: now }
     if (updates.title !== undefined) patch.title = updates.title
-    if (updates.content !== undefined) patch.summary = generateSummary(updates.content ?? '')
+    if (updates.content !== undefined) patch.summary = generateSummary(updates.content)
     return { ...note, ...patch }
   })
 }
@@ -139,10 +139,8 @@ export function useCreateNote() {
 
   return useMutation({
     mutationFn: async (folderId?: string | null) => {
-      const json: Record<string, unknown> = { title: DEFAULT_NOTE_TITLE, content: '' }
-      if (folderId) json.folderId = folderId
       const res = await api.notes.$post({
-        json: json as { title?: string; content?: string | null; folderId?: string | null },
+        json: { title: DEFAULT_NOTE_TITLE, content: '', folderId: folderId ?? null },
       })
       if (!res.ok) await throwApiError(res, `Create failed: ${res.status}`)
       const body = await res.json()
@@ -156,7 +154,7 @@ export function useCreateNote() {
       const listItem: NoteListItem = {
         id: newNote.id,
         title: newNote.title,
-        summary: generateSummary(newNote.content ?? ''),
+        summary: generateSummary(newNote.content),
         folderId: newNote.folderId,
         createdAt: newNote.createdAt,
         updatedAt: newNote.updatedAt,

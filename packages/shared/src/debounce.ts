@@ -1,5 +1,5 @@
 /**
- * debounce.ts — 防抖 / 防滑
+ * debounce.ts — 防抖 / 节流
  */
 
 // ============================================================
@@ -23,7 +23,7 @@ export function debounce<T extends (...args: any[]) => any>(
 
   function debounced(this: unknown, ...args: Parameters<T>) {
     lastArgs = args
-    // eslint-disable-next-line
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     lastContext = this
 
     if (timer !== null) {
@@ -54,7 +54,7 @@ export function debounce<T extends (...args: any[]) => any>(
 }
 
 // ============================================================
-// Throttle — 防滑
+// Throttle — 节流
 // ============================================================
 
 interface ThrottleOptions {
@@ -65,7 +65,7 @@ interface ThrottleOptions {
 }
 
 /**
- * 防滑函数
+ * 节流函数
  * 在固定时间窗口内最多执行一次
  *
  * @example
@@ -101,13 +101,21 @@ export function throttle<T extends (...args: any[]) => any>(
       if (leading || lastTime !== 0) {
         lastTime = now
         result = fn.apply(this, args)
-      } else {
-        lastTime = now
+      } else if (trailing) {
+        // leading=false 且首次调用：不立即执行，通过 trailing 定时器延迟
+        // eslint-disable-next-line @typescript-eslint/no-this-alias
+        const ctx = this
+        const capturedArgs = args
+        timer = setTimeout(() => {
+          lastTime = Date.now()
+          timer = null
+          result = fn.apply(ctx, capturedArgs)
+        }, wait)
       }
     } else if (trailing && timer === null) {
       // 窗口内，设置 trailing 定时器
       // 需要捕捉当前调用的 this 和 args，用立即执行闭包隔离
-      // eslint-disable-next-line
+      // eslint-disable-next-line @typescript-eslint/no-this-alias
       const ctx = this
       const capturedArgs = args
       timer = setTimeout(() => {

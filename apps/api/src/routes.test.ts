@@ -9,6 +9,7 @@ function createNote() {
     id: 'n1',
     title: 'Title',
     content: 'Content',
+    folderId: null,
     createdAt: '2026-02-14T01:02:03.000Z',
     updatedAt: '2026-02-14T01:02:03.000Z',
   }
@@ -19,6 +20,7 @@ function createListItem() {
     id: 'n1',
     title: 'Title',
     summary: 'Content',
+    folderId: null,
     createdAt: '2026-02-14T01:02:03.000Z',
     updatedAt: '2026-02-14T01:02:03.000Z',
   }
@@ -31,6 +33,7 @@ function createTestApp(
     create: ReturnType<typeof vi.fn>
     update: ReturnType<typeof vi.fn>
     remove: ReturnType<typeof vi.fn>
+    search: ReturnType<typeof vi.fn>
   }
 ) {
   const app = new Hono<{ Bindings: object }>()
@@ -47,6 +50,7 @@ describe('registerNoteRoutes', () => {
       create: vi.fn(async () => createNote()),
       update: vi.fn(async () => ({ ...createNote(), title: 'Updated' })),
       remove: vi.fn(async () => true),
+      search: vi.fn(async () => []),
     }
 
     const app = createTestApp(() => service)
@@ -87,6 +91,7 @@ describe('registerNoteRoutes', () => {
       create: vi.fn(async () => createNote()),
       update: vi.fn(async () => null),
       remove: vi.fn(async () => false),
+      search: vi.fn(async () => []),
     }
 
     const app = createTestApp(() => service)
@@ -109,6 +114,7 @@ describe('registerNoteRoutes', () => {
       create: vi.fn(async () => createNote()),
       update: vi.fn(async () => null),
       remove: vi.fn(async () => false),
+      search: vi.fn(async () => []),
     }
 
     const app = createTestApp(() => service)
@@ -121,6 +127,37 @@ describe('registerNoteRoutes', () => {
     expect(body).toEqual({ error: '未找到' })
   })
 
+  it('handles search endpoint', async () => {
+    const mockResults = [
+      {
+        id: 'n1',
+        title: 'Search Result',
+        summary: 'Result summary',
+        folderId: null,
+        createdAt: '2026-02-14T01:02:03.000Z',
+        updatedAt: '2026-02-14T01:02:03.000Z',
+        snippet: 'Search <mark>result</mark>',
+      },
+    ]
+    const service = {
+      list: vi.fn(async () => ({ data: [], nextCursor: null, nextCursorId: null })),
+      getById: vi.fn(async () => null),
+      create: vi.fn(async () => createNote()),
+      update: vi.fn(async () => null),
+      remove: vi.fn(async () => false),
+      search: vi.fn(async () => mockResults),
+    }
+
+    const app = createTestApp(() => service)
+
+    const searchRes = await app.request('/notes/search?q=result')
+    expect(searchRes.status).toBe(200)
+    expect(service.search).toHaveBeenCalledWith({ q: 'result', limit: 20 })
+    const body = await searchRes.json()
+    expect(body.data).toHaveLength(1)
+    expect(body.data[0].id).toBe('n1')
+  })
+
   it('rejects invalid request bodies by route validators', async () => {
     const service = {
       list: vi.fn(async () => ({ data: [], nextCursor: null, nextCursorId: null })),
@@ -128,6 +165,7 @@ describe('registerNoteRoutes', () => {
       create: vi.fn(async () => createNote()),
       update: vi.fn(async () => null),
       remove: vi.fn(async () => false),
+      search: vi.fn(async () => []),
     }
 
     const app = createTestApp(() => service)

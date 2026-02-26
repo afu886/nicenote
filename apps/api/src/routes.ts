@@ -72,7 +72,8 @@ export function registerNoteRoutes<E extends Env, S extends Schema, BasePath ext
     })
 }
 
-function _createContractAppForType() {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- 仅用于 AppType 类型推导
+function buildContractApp() {
   const noteApp = registerNoteRoutes(new Hono(), () => ({
     list: () => ({ data: [], nextCursor: null, nextCursorId: null }),
     getById: () => null,
@@ -118,4 +119,4 @@ function _createContractAppForType() {
   return new Hono().route('', noteApp).route('', folderApp).route('', tagApp)
 }
 
-export type AppType = ReturnType<typeof _createContractAppForType>
+export type AppType = ReturnType<typeof buildContractApp>

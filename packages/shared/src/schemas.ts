@@ -4,8 +4,8 @@ z.config({ jitless: true })
 
 const isoDateTimeSchema = z.string().datetime({ offset: true })
 
-const MAX_TITLE_LENGTH = 500
-const MAX_CONTENT_LENGTH = 100_000
+export const MAX_TITLE_LENGTH = 500
+export const MAX_CONTENT_LENGTH = 100_000
 
 export const noteSelectSchema = z
   .object({
@@ -22,20 +22,11 @@ export const noteListItemSchema = noteSelectSchema.omit({ content: true }).exten
   summary: z.string().nullable(),
 })
 
-export const noteInsertSchema = z
-  .object({
-    id: z.string().optional(),
-    title: z.string().max(MAX_TITLE_LENGTH).optional(),
-    content: z.string().max(MAX_CONTENT_LENGTH).nullable().optional(),
-    createdAt: isoDateTimeSchema.optional(),
-    updatedAt: isoDateTimeSchema.optional(),
-  })
-  .strict()
-
 export const noteCreateSchema = z
   .object({
     title: z.string().max(MAX_TITLE_LENGTH).optional(),
-    content: z.string().max(MAX_CONTENT_LENGTH).nullable().optional(),
+    // content 不允许 null：清空内容应发送空字符串，接受 null 会被 service 静默视为 ''
+    content: z.string().max(MAX_CONTENT_LENGTH).optional(),
     folderId: z.string().nullable().optional(),
   })
   .strict()
@@ -43,7 +34,8 @@ export const noteCreateSchema = z
 export const noteUpdateSchema = z
   .object({
     title: z.string().max(MAX_TITLE_LENGTH).optional(),
-    content: z.string().max(MAX_CONTENT_LENGTH).nullable().optional(),
+    // content 不允许 null：null 无法表达"清空内容"（应发送空字符串），接受 null 会被 service 静默忽略
+    content: z.string().max(MAX_CONTENT_LENGTH).optional(),
     folderId: z.string().nullable().optional(),
   })
   .strict()
@@ -69,7 +61,6 @@ export const noteListQuerySchema = z.object({
 
 export type NoteSelect = z.infer<typeof noteSelectSchema>
 export type NoteListItem = z.infer<typeof noteListItemSchema>
-export type NoteInsert = z.infer<typeof noteInsertSchema>
 export type NoteCreateInput = z.infer<typeof noteCreateSchema>
 export type NoteUpdateInput = z.infer<typeof noteUpdateSchema>
 export type NoteListQuery = z.infer<typeof noteListQuerySchema>

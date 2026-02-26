@@ -6,7 +6,7 @@ import type { FolderContractService } from '@nicenote/shared'
 
 import { folders } from '../db/schema'
 
-import type { NoteServiceBindings } from './note-service'
+type ServiceBindings = { DB: Parameters<typeof drizzle>[0] }
 
 const FOLDER_SELECT_COLUMNS = {
   id: folders.id,
@@ -17,7 +17,7 @@ const FOLDER_SELECT_COLUMNS = {
   updatedAt: folders.updatedAt,
 } as const
 
-export function createFolderService(bindings: NoteServiceBindings): FolderContractService {
+export function createFolderService(bindings: ServiceBindings): FolderContractService {
   const db = drizzle(bindings.DB)
 
   return {
@@ -47,13 +47,12 @@ export function createFolderService(bindings: NoteServiceBindings): FolderContra
     },
 
     update: async (id, body) => {
-      const updates: Record<string, unknown> = {
+      const updates: Partial<typeof folders.$inferInsert> = {
         updatedAt: new Date().toISOString(),
+        ...(body.name !== undefined && { name: body.name }),
+        ...(body.parentId !== undefined && { parentId: body.parentId }),
+        ...(body.position !== undefined && { position: body.position }),
       }
-
-      if (body.name !== undefined) updates.name = body.name
-      if (body.parentId !== undefined) updates.parentId = body.parentId
-      if (body.position !== undefined) updates.position = body.position
 
       const result = await db
         .update(folders)

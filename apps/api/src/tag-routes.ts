@@ -27,6 +27,13 @@ export function registerTagRoutes<E extends Env, S extends Schema, BasePath exte
       const data = await service.list()
       return c.json({ data: tagSelectSchema.array().parse(data) })
     })
+    .get('/tags/:id', zValidator('param', tagIdParamSchema), async (c) => {
+      const service = createService(c.env as E['Bindings'])
+      const { id } = c.req.valid('param')
+      const result = await service.getById(id)
+      if (!result) throw new AppError('notFound', 404)
+      return c.json(tagSelectSchema.parse(result))
+    })
     .post('/tags', zValidator('json', tagCreateSchema), async (c) => {
       const service = createService(c.env as E['Bindings'])
       const body = c.req.valid('json')
@@ -62,8 +69,8 @@ export function registerTagRoutes<E extends Env, S extends Schema, BasePath exte
     .post('/notes/:id/tags/:tagId', zValidator('param', noteTagParamSchema), async (c) => {
       const service = createService(c.env as E['Bindings'])
       const { id, tagId } = c.req.valid('param')
-      const added = await service.addTagToNote(id, tagId)
-      if (!added) throw new AppError('notFound', 404)
+      // addTagToNote 已幂等：新增或已存在均返回 true，真实错误向上抛出
+      await service.addTagToNote(id, tagId)
       return c.json({ success: true })
     })
     .delete('/notes/:id/tags/:tagId', zValidator('param', noteTagParamSchema), async (c) => {

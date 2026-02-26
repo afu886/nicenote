@@ -100,8 +100,6 @@ $(cat "$prev")"
 ## 下轮建议
 重点关注方向
 
-## 状态: CONTINUE 或 COMPLETE
-（当 P0=0 且 P1≤2 时可判定 COMPLETE）
 \`\`\`
 ${prev_context}" \
     --output-format text \
@@ -109,6 +107,8 @@ ${prev_context}" \
       log_err "第 ${round} 轮执行失败"
       return 1
     }
+# ## 状态: CONTINUE 或 COMPLETE
+# （当 P0=0 且 P1=0 且 P2=0 且 P3≤1 时可判定 COMPLETE）
 
   log_ok "报告已保存: $report"
 

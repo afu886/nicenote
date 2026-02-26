@@ -142,6 +142,7 @@ const zh = {
   export: {
     exportNote: '\u5bfc\u51fa\u4e3a Markdown',
     exportAll: '\u5bfc\u51fa\u5168\u90e8\u7b14\u8bb0',
+    exportError: '\u5bfc\u51fa\u7b14\u8bb0\u5931\u8d25',
   },
 }
 

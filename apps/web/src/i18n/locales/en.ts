@@ -139,6 +139,7 @@ const en = {
   export: {
     exportNote: 'Export as Markdown',
     exportAll: 'Export All Notes',
+    exportError: 'Failed to export notes',
   },
 } as const
 

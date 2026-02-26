@@ -1,7 +1,7 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import type { NoteSelect } from '@nicenote/shared'
+import { noteSelectSchema } from '@nicenote/shared'
 import { useIsBreakpoint } from '@nicenote/ui'
 
 import { EditorErrorBoundary } from './components/ErrorBoundary'
@@ -21,6 +21,7 @@ import { downloadBlob, exportAllNotes } from './lib/export'
 import { useFolderStore } from './store/useFolderStore'
 import { useNoteStore } from './store/useNoteStore'
 import { useSidebarStore } from './store/useSidebarStore'
+import { useToastStore } from './store/useToastStore'
 
 const NoteEditorPane = lazy(() =>
   import('./components/NoteEditorPane').then((m) => ({ default: m.NoteEditorPane }))
@@ -39,6 +40,7 @@ export default function App() {
   const closeShortcuts = useCallback(() => setShortcutsOpen(false), [])
   const closeImport = useCallback(() => setImportOpen(false), [])
 
+  const addToast = useToastStore((s) => s.addToast)
   const createMutation = useCreateNote()
   const toggleSidebar = useSidebarStore((s) => s.toggle)
 
@@ -76,27 +78,30 @@ export default function App() {
   const handleImport = useCallback(() => setImportOpen(true), [])
 
   const handleExportAll = useCallback(async () => {
-    // Get all note IDs from the cached list
     const noteIds = notesData?.pages.flatMap((p) => p.data.map((n) => n.id)) ?? []
     if (noteIds.length === 0) return
 
-    // Fetch full content for each note
-    const fullNotes: NoteSelect[] = []
-    for (const id of noteIds) {
-      try {
-        const res = await api.notes[':id'].$get({ param: { id } })
-        if (res.ok) {
-          const note = (await res.json()) as NoteSelect
-          fullNotes.push(note)
-        }
-      } catch {
-        // Skip failed fetches
-      }
-    }
+    try {
+      // 并行获取所有笔记完整内容
+      const results = await Promise.allSettled(
+        noteIds.map(async (id) => {
+          const res = await api.notes[':id'].$get({ param: { id } })
+          if (!res.ok) return null
+          const parsed = noteSelectSchema.safeParse(await res.json())
+          return parsed.success ? parsed.data : null
+        })
+      )
 
-    const blob = await exportAllNotes(fullNotes, folders)
-    downloadBlob(blob, 'nicenote-export.zip')
-  }, [notesData, folders])
+      const fullNotes = results.flatMap((r) =>
+        r.status === 'fulfilled' && r.value ? [r.value] : []
+      )
+
+      const blob = await exportAllNotes(fullNotes, folders)
+      downloadBlob(blob, 'nicenote-export.zip')
+    } catch {
+      addToast(t('export.exportError'))
+    }
+  }, [notesData, folders, addToast, t])
 
   return (
     <div
